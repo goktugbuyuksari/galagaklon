@@ -1,25 +1,22 @@
-#include <SDL3/SDL.h>         // Temel SDL3 kütüphanesi (Pencere, çizim, girdi vb. için)
-#include <SDL3_ttf/SDL_ttf.h> // SDL3 Yazı Tipi (Font) kütüphanesi (Ekrana yazı yazdırmak için)
-#include <stdio.h>            // Standart giriş/çıkış kütüphanesi (printf, file işlemleri için)
-#include <stdlib.h>           // Standart kütüphane (rastgele sayı üretimi malloc vb. için)
-#include <stdbool.h>          // Mantıksal (doğru/yanlış) değişken türü için.
-#include <time.h>             // Zaman kütüphanesi (rastgele sayıları zamana bağlamak için)
+#include <SDL3/SDL.h>         // Temel SDL3 kÃ¼tÃ¼phanesi (Pencere, Ã§izim, girdi vb. iÃ§in)
+#include <SDL3_ttf/SDL_ttf.h> // SDL3 YazÃ½ Tipi (Font) kÃ¼tÃ¼phanesi (Ekrana yazÃ½ yazdÃ½rmak iÃ§in)
+#include <stdio.h>            // Standart giriÃ¾/Ã§Ã½kÃ½Ã¾ kÃ¼tÃ¼phanesi (printf, file iÃ¾lemleri iÃ§in)
+#include <stdlib.h>           // Standart kÃ¼tÃ¼phane (rastgele sayÃ½ Ã¼retimi malloc vb. iÃ§in)
+#include <stdbool.h>          // MantÃ½ksal (doÃ°ru/yanlÃ½Ã¾) deÃ°iÃ¾ken tÃ¼rÃ¼ iÃ§in.
+#include <time.h>             // Zaman kÃ¼tÃ¼phanesi (rastgele sayÃ½larÃ½ zamana baÃ°lamak iÃ§in)
 
 
-                                        // --- OYUN AYARLARI VE SABİTLERİ ---
+                                        // --- OYUN AYARLARI VE SABÃTLERÃ ---
 
 
-#define WEIGHT 800           // Oyunun genişliği.
-#define HEIGHT 600          // Oyunun yüksekliği.
-#define MAX_BULLETS 200     // Ekranda aynı anda bulunabilecek maksimum mermi sayısı.
-#define MAX_ENEMIES 18      // Ekranda bulunabilecek maksimum düşman sayısı. (Burada 3 satır x 6 sütun şeklindedir.)
-#define MAX_STARS 100       // Arka plandaki maksimum kayan yıldız sayısı.
-#define MAX_PARTICLES 300   // Patlama efektleri için maksimum parçacık sayısı.
-#define MAX_POWERUPS 10     // Ekranda aynı anda bulanabilecek maksimum güçlendirici sayısı.
-#define MAX_POPUPS 10       // Ekranda çıkacak bilgilendirme yazılarının (kalkan sınırsız mermi vb.) sayısı.
-
-
-
+#define WEIGHT 800           // Oyunun geniÃ¾liÃ°i.
+#define HEIGHT 600          // Oyunun yÃ¼ksekliÃ°i.
+#define MAX_BULLETS 200     // Ekranda aynÃ½ anda bulunabilecek maksimum mermi sayÃ½sÃ½.
+#define MAX_ENEMIES 18      // Ekranda bulunabilecek maksimum dÃ¼Ã¾man sayÃ½sÃ½. (Burada 3 satÃ½r x 6 sÃ¼tun Ã¾eklindedir.)
+#define MAX_STARS 100       // Arka plandaki maksimum kayan yÃ½ldÃ½z sayÃ½sÃ½.
+#define MAX_PARTICLES 300   // Patlama efektleri iÃ§in maksimum parÃ§acÃ½k sayÃ½sÃ½.
+#define MAX_POWERUPS 10     // Ekranda aynÃ½ anda bulanabilecek maksimum gÃ¼Ã§lendirici sayÃ½sÃ½.
+#define MAX_POPUPS 10       // Ekranda Ã§Ã½kacak bilgilendirme yazÃ½larÃ½nÃ½n (kalkan sÃ½nÃ½rsÃ½z mermi vb.) sayÃ½sÃ½.
 
 
 
@@ -27,121 +24,165 @@
 
 
 
-                                    // --- DÜŞMAN VE GÜÇLENDİRİCİ TİPLERİ  ------
 
 
 
-  enum EnemyType { Type_NORMAL = 0, Type_FAST = 1, Type_ARMORED = 2 };            //normal--hızlı ve zırhlı olarak 3 düşman türü
-  enum PowerUpType { Power_SHIELD = 0, Power_RAPIDFIRE = 1, Power_AMMO = 2 };  //kalkan--hızlı veya seri atış ve ekstra mermi
+                                    // --- DÃœÃMAN VE GÃœÃ‡LENDÃRÃCÃ TÃPLERÃ  ------
 
 
 
-                                            // ----Yapı Tanımlamaları----
+  enum EnemyType { Type_NORMAL = 0, Type_FAST = 1, Type_ARMORED = 2 };            //normal--hÃ½zlÃ½ ve zÃ½rhlÃ½ olarak 3 dÃ¼Ã¾man tÃ¼rÃ¼
+  enum PowerUpType { Power_SHIELD = 0, Power_RAPIDFIRE = 1, Power_AMMO = 2 };  //kalkan--hÃ½zlÃ½ veya seri atÃ½Ã¾ ve ekstra mermi
 
 
-           // Arkaplan Yıldız Yapısı
+
+                                            // ----YapÃ½ TanÃ½mlamalarÃ½----
+
+
+           // Arkaplan YÃ½ldÃ½z YapÃ½sÃ½
 
 typedef struct {
-    float x, y;                 // Yıldızın konumu
-    float speedX, speedY;       // Yıldızın x ve y ekseninde ki hızları
-    float size;                 // Yıldızın boyutu piksel cinsinde
-    SDL_Color color;            // Yıldızın rengi
+    float x, y;                 // YÃ½ldÃ½zÃ½n konumu
+    float speedX, speedY;       // YÃ½ldÃ½zÃ½n x ve y ekseninde ki hÃ½zlarÃ½
+    float size;                 // YÃ½ldÃ½zÃ½n boyutu piksel cinsinde
+    SDL_Color color;            // YÃ½ldÃ½zÃ½n rengi
 } Star;
 
 
 
 
 
-          // Patlama Efekti Yapısı
+          // Patlama Efekti YapÃ½sÃ½
 typedef struct {
-    float x, y;                 // Parçacığın konumu
-    float speedX, speedY;       // Parçacığın  hızı
-    float life, maxLife;        // Parçacığın ekranda kalma süresi
-    SDL_Color color;            // Parçacığın rengi
-    bool active;                // Parçacık aktif mi?
+    float x, y;                 // ParÃ§acÃ½Ã°Ã½n konumu
+    float speedX, speedY;       // ParÃ§acÃ½Ã°Ã½n  hÃ½zÃ½
+    float life, maxLife;        // ParÃ§acÃ½Ã°Ã½n ekranda kalma sÃ¼resi
+    SDL_Color color;            // ParÃ§acÃ½Ã°Ã½n rengi
+    bool active;                // ParÃ§acÃ½k aktif mi?
 } Particle;
 
 
 
-          // Güçlendirici Yapısı
+          // GÃ¼Ã§lendirici YapÃ½sÃ½
 typedef struct {
-    float x, y;                 // Güçlendiricinin konumu
-    float speedY;               // Aşağı doğru düşeceği için Y ekseninde ki hızı
-    int type;                   // Hangi güçlendirici?
+    float x, y;                 // GÃ¼Ã§lendiricinin konumu
+    float speedY;               // AÃ¾aÃ°Ã½ doÃ°ru dÃ¼Ã¾eceÃ°i iÃ§in Y ekseninde ki hÃ½zÃ½
+    int type;                   // Hangi gÃ¼Ã§lendirici?
     bool active;                // Ekranda aktif mi?
 } PowerUp;
 
 
 
 
-            // Bilgi Yazısının Yapısı (kalkan vb. için)
+            // Bilgi YazÃ½sÃ½nÃ½n YapÃ½sÃ½ (kalkan vb. iÃ§in)
 typedef struct {
-    float x, y;                 // Yazının konumu
-    char text[32];              // Görünecek yazı
-    float life;                 // Ekranda görünme süresi
-    SDL_Color color;            // Yazının rengi
+    float x, y;                 // YazÃ½nÃ½n konumu
+    char text[32];              // GÃ¶rÃ¼necek yazÃ½
+    float life;                 // Ekranda gÃ¶rÃ¼nme sÃ¼resi
+    SDL_Color color;            // YazÃ½nÃ½n rengi
     bool active;                // Aktif mi?
 } PopupText;
 
 
 
-           // Oyuncu Gemisinin yapısı
+           // Oyuncu Gemisinin yapÃ½sÃ½
 typedef struct {
-    float x, y;           //Geminin anlık koordinantları
-    float width, height;  //Geminin genişiği ve yüksekliği
-    float speed;          // Geminin hızı
-    float cooldown;       //Bekleme süresi
-    int lives;            //Can sayısı
-    int hp;               //Sağlık (100-0)
-    int ammo;             //Mermi sayısı
-    float ammoTimer;      //Zamanla mermi sayısının artması
-    float invulnerabilityTimer;  //Hasar aldıktan sonra geminin belli bir süreliğine hasar almaması
+    float x, y;           //Geminin anlÃ½k koordinantlarÃ½
+    float width, height;  //Geminin geniÃ¾iÃ°i ve yÃ¼ksekliÃ°i
+    float speed;          // Geminin hÃ½zÃ½
+    float cooldown;       //Bekleme sÃ¼resi
+    int lives;            //Can sayÃ½sÃ½
+    int hp;               //SaÃ°lÃ½k (100-0)
+    int ammo;             //Mermi sayÃ½sÃ½
+    float ammoTimer;      //Zamanla mermi sayÃ½sÃ½nÃ½n artmasÃ½
+    float invulnerabilityTimer;  //Hasar aldÃ½ktan sonra geminin belli bir sÃ¼reliÃ°ine hasar almamasÃ½
 
 
 
 
-           // Güçlendirici Süreleri
-    float shieldTimer;          // Kalkan süresi
-    float rapidFireTimer;       // Seri veya hızlı atış süresi
+           // GÃ¼Ã§lendirici SÃ¼releri
+    float shieldTimer;          // Kalkan sÃ¼resi
+    float rapidFireTimer;       // Seri veya hÃ½zlÃ½ atÃ½Ã¾ sÃ¼resi
 } Player;
 
 
-           // Düşman ve Boss yapısı
+           // DÃ¼Ã¾man ve Boss yapÃ½sÃ½
 typedef struct {
-    float x, y;                //Düşmanın bulunduğu anlık koordinantlar
-    float offsetX, offsetY;    //Dalış yapmayan grup halinde bulunan düşmanın sabit yeridir. Sağa ve sola kayarken bu değerlerden dolayı hizaları bozulmaz
-    float width, height;       //Düşman gemilerinin genişliği ve yüksekliği
-    bool isDiving;             //Düşman gemisinin dalışa geçip geçmediğini belirlemek için
-    bool active;               //Düşman gemisinin hayatta olup olmadığını belirler
-    bool isBoss;               //Boss mu değil mi diye kontrol eder
-    int type;                   //Düşmanın türünü belirler
-    int hp;                     // Düşman gemilerinin sağlığı
-    float attackCooldown;        //Bossun tekrardan ateş edebilmesi için gereken süre
+    float x, y;                //DÃ¼Ã¾manÃ½n bulunduÃ°u anlÃ½k koordinantlar
+    float offsetX, offsetY;    //DalÃ½Ã¾ yapmayan grup halinde bulunan dÃ¼Ã¾manÃ½n sabit yeridir. SaÃ°a ve sola kayarken bu deÃ°erlerden dolayÃ½ hizalarÃ½ bozulmaz
+    float width, height;       //DÃ¼Ã¾man gemilerinin geniÃ¾liÃ°i ve yÃ¼ksekliÃ°i
+    bool isDiving;             //DÃ¼Ã¾man gemisinin dalÃ½Ã¾a geÃ§ip geÃ§mediÃ°ini belirlemek iÃ§in
+    bool active;               //DÃ¼Ã¾man gemisinin hayatta olup olmadÃ½Ã°Ã½nÃ½ belirler
+    bool isBoss;               //Boss mu deÃ°il mi diye kontrol eder
+    int type;                   //DÃ¼Ã¾manÃ½n tÃ¼rÃ¼nÃ¼ belirler
+    int hp;                     // DÃ¼Ã¾man gemilerinin saÃ°lÃ½Ã°Ã½
+    float attackCooldown;        //Bossun tekrardan ateÃ¾ edebilmesi iÃ§in gereken sÃ¼re
 } Enemy;
 
 
-          // Mermi yapısı
+          // Mermi yapÃ½sÃ½
 typedef struct {
-    float x, y;             //Merminin anlık konumu
-    float width, height;    //Merminin genişliği ve yüksekliği
-    float speedX, speedY;   //Merminin X ve Y ekseninde ki hızları
-    bool isEnemyBullet;     //Düşman mermisi mi?
-    int damage;             //Sağlıktan kaç götürecek?
+    float x, y;             //Merminin anlÃ½k konumu
+    float width, height;    //Merminin geniÃ¾liÃ°i ve yÃ¼ksekliÃ°i
+    float speedX, speedY;   //Merminin X ve Y ekseninde ki hÃ½zlarÃ½
+    bool isEnemyBullet;     //DÃ¼Ã¾man mermisi mi?
+    int damage;             //SaÃ°lÃ½ktan kaÃ§ gÃ¶tÃ¼recek?
     bool active;            //Mermi ekranda aktif mi?
 } Bullet;
 
-                                      // --- GLOBAL DEĞİŞKENLER ---
+                                      // --- GLOBAL DEÃÃÃKENLER ---
 
 
 
 Player player;
 Enemy enemies[MAX_ENEMIES];
 Bullet bullets[MAX_BULLETS];
-Star stars[MAX_STARS];          // Yeni: Yıldız dizisi
-Particle particles[MAX_PARTICLES]; // Yeni: Partikül dizisi
-PowerUp powerups[MAX_POWERUPS]; // Yeni: Güçlendirici dizisi
-PopupText popups[MAX_POPUPS];   // Yeni: Yüzen yazı dizisi
+Star stars[MAX_STARS];          // Yeni: YÃ½ldÃ½z dizisi
+Particle particles[MAX_PARTICLES]; // Yeni: PartikÃ¼l dizisi
+PowerUp powerups[MAX_POWERUPS]; // Yeni: GÃ¼Ã§lendirici dizisi
+PopupText popups[MAX_POPUPS];   // Yeni: YÃ¼zen yazÃ½ dizisi
 
+
+int main(int argc, char* argv[]) {
+    // Buraya oyunun baÅŸlatma kodlarÄ±nÄ± (init, loop vb.) ekle
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return 0;
+}
 
 
 
