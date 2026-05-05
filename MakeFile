@@ -1,0 +1,20 @@
+# Proje Adı
+TARGET = galagaklon
+
+# Kaynak Dosyalar (Senin ana dosyan klon2.c olduğu için bunu yazdık)
+SRCS = klon2.c
+
+# Derleyici
+CC = gcc
+
+# SDL3 Kütüphane Ayarları (Sistemde kurulu olduğu varsayılan yollar)
+CFLAGS = -Wall -Wextra -std=c11
+LDFLAGS = -lSDL3 -lSDL3_ttf
+
+# Derleme Kuralı
+all:
+	$(CC) $(SRCS) $(CFLAGS) $(LDFLAGS) -o $(TARGET)
+
+# Temizlik Kuralı (Oluşan .exe'yi siler)
+clean:
+	rm -f $(TARGET)
