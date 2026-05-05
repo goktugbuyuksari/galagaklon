@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="proje galaga klon" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/proje galaga klon" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="C:/Users/goktu/Downloads/SDL3-devel-3.4.4-mingw.tar.gz/SDL3-3.4.4/x86_64-w64-mingw32/include" />
+				</Compiler>
+				<Linker>
+					<Add directory="C:/Users/goktu/Downloads/SDL3-devel-3.4.4-mingw.tar.gz/SDL3-3.4.4/x86_64-w64-mingw32/lib" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/proje galaga klon" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="C:/Users/goktu/Downloads/SDL3-devel-3.4.4-mingw/SDL3-3.4.4/x86_64-w64-mingw32/include" />
+			<Add directory="C:/Users/goktu/Downloads/SDL3_ttf-devel-3.2.2-mingw/SDL3_ttf-3.2.2/x86_64-w64-mingw32/include" />
+		</Compiler>
+		<Linker>
+			<Add option="-lmingw32" />
+			<Add option="-lSDL3" />
+			<Add library="mingw32" />
+			<Add library="SDL3" />
+			<Add library="SDL3_test" />
+			<Add directory="C:/Users/goktu/Downloads/SDL3-devel-3.4.4-mingw/SDL3-3.4.4/x86_64-w64-mingw32/lib" />
+			<Add directory="C:/Users/goktu/Downloads/SDL3_ttf-devel-3.2.2-mingw/SDL3_ttf-3.2.2/x86_64-w64-mingw32/lib" />
+		</Linker>
+		<Unit filename="klon2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>
