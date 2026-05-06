@@ -143,8 +143,67 @@ PowerUp powerups[MAX_POWERUPS]; // Yeni: Güçlendirici dizisi
 PopupText popups[MAX_POPUPS];   // Yeni: Yüzen yazý dizisi
 
 
+int score=0;
+int highScore=0;
+int enemiesKilled=0;
+int level=1;
+bool isBossLevel= false;
+bool isGameOver= false;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main(int argc, char* argv[]) {
-    // Buraya oyunun başlatma kodlarını (init, loop vb.) ekle
+
 
 
 
