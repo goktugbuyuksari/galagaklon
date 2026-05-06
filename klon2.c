@@ -150,8 +150,9 @@ int level=1;
 bool isBossLevel= false;
 bool isGameOver= false;
 
-
-
+float formationX=75.0f;
+float formationY=25.0f;
+float formationSpeedX=50.0f;
 
 
 
