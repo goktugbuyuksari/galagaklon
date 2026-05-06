@@ -168,7 +168,18 @@ return hs;
         }
                      }
 
+int saveHighScore(int hs){
 
+FILE*file=fopen("highscore.txt","r");
+if(file) {fprintf(file,"%d",hs);
+fclose(file);
+
+}
+
+
+
+
+}
 
 
 
