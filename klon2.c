@@ -158,8 +158,8 @@ float formationSpeedX=50.0f;
 
               //---Yardımcı Fonksiyonlar---
 
-void loadHighsScore(){
-Fıle*file=fopen("highscore.txt","w");//En yüksek skorun kalıcı olması sağlandı.
+int loadHighsScore(){
+FILE*file=fopen("highscore.txt","w");//En yüksek skorun kalıcı olması sağlandı.
 int hs=0;
 if(file){fscanf(file,"%d",&hs);//highscore.txt dosyası yok ise en yüksek skor 0 dan başlar.
 fclose(file);
