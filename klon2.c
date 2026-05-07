@@ -170,7 +170,7 @@ return hs;
 
 int saveHighScore(int hs){
 
-FILE*file=fopen("highscore.txt","w");//highscore.txt içine yeni yüksek skoru atar.
+FILE*file=fopen("highscore.txt","w");//highscore.txt içine yeni yüksek skoru yazar.
 if(file) {fprintf(file,"%d",hs);
 fclose(file);
 
@@ -178,7 +178,16 @@ fclose(file);
                         }
 
 
-
+void shootBullet(float x, float y, float w, float h, float speedX, float speedY, bool isEnemy, int damage) {
+    for (int i = 0; i < MAX_BULLETS; i++) {
+        if (!bullets[i].active) {
+            bullets[i].x = x; bullets[i].y = y; bullets[i].width = w; bullets[i].height = h;
+            bullets[i].speedX = speedX; bullets[i].speedY = speedY;
+            bullets[i].isEnemyBullet = isEnemy; bullets[i].damage = damage; bullets[i].active = true;
+            break;
+        }
+    }
+}
 
 
 
