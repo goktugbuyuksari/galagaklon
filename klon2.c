@@ -193,7 +193,7 @@ void shootBullet(float x, float y, float w, float h, float speedX, float speedY,
 
                                                  // --- EFEKT VE SİSTEM FONKSİYONLARI ---
 
-    // Arka plandaki yıldızların hızını ve konumunu rastgale belirlemej
+    // Arka plandaki yıldızların hızını ve konumunu rastgale belirler
 void initStars() {
     for (int i = 0; i < MAX_STARS; i++){//yıldızları teker teker ayarlar
         stars[i].x = rand() % WEIGHT;//yıldızların ekran üzeerindeki rastgale x konumu
@@ -209,7 +209,24 @@ void initStars() {
 
 
 
-
+   // Belirtilen koordinatta parçacık saçılımı oluşturur
+void spawnExplosion(float x, float y, SDL_Color color, int count) {
+    int spawned = 0;
+    for (int i = 0; i < MAX_PARTICLES && spawned < count; i++) {
+        if (!particles[i].active) {
+            particles[i].x = x;   //Patlama merkezinin X konumu
+            particles[i].y = y;   //Patlama merkezinin Y konumu
+            // Etrafa rastgele yönlerde saçılması
+            particles[i].speedX = (float)((rand() % 200) - 100);//Parçacığın X ekseninde ki hızı(-100-100)
+            particles[i].speedY = (float)((rand() % 200) - 100);//Parçacığın Y ekseninde ki hızı(-100-100)
+            particles[i].maxLife = (float)(rand() % 50 + 20) / 100.0f; // Parçacığın ömrü (0.2-0.7)saniye
+            particles[i].life = particles[i].maxLife;
+            particles[i].color = color;
+            particles[i].active = true;//Kıvılcımı aktif eder
+            spawned++;
+        }
+    }
+}
 
 
 
