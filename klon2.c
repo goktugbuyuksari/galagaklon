@@ -177,16 +177,33 @@ fclose(file);
          }
                         }
 
-
+                //---Mermi ateşleme---
 void shootBullet(float x, float y, float w, float h, float speedX, float speedY, bool isEnemy, int damage) {
-    for (int i = 0; i < MAX_BULLETS; i++) {
-        if (!bullets[i].active) {
-            bullets[i].x = x; bullets[i].y = y; bullets[i].width = w; bullets[i].height = h;
-            bullets[i].speedX = speedX; bullets[i].speedY = speedY;
-            bullets[i].isEnemyBullet = isEnemy; bullets[i].damage = damage; bullets[i].active = true;
+    for (int i = 0; i < MAX_BULLETS; i++) {//define ile oluşturduğumuz 200 mermilik diziyi baştan sonra tarar
+        if (!bullets[i].active) //aktif olmayan mermi dizisini arar{
+            bullets[i].x = x; bullets[i].y = y; bullets[i].width = w; bullets[i].height = h;//merminin özellikleri
+            bullets[i].speedX = speedX; bullets[i].speedY = speedY;//Merminin X ve Y ekseninde ki hızları
+            bullets[i].isEnemyBullet = isEnemy; bullets[i].damage = damage; bullets[i].active = true;//Merminin düşmanmı yoksa bizim gemimizden mi diye belirlenir ve hasar değeri yüklenir
             break;
         }
     }
+
+
+
+
+                                                 // --- EFEKT VE SİSTEM FONKSİYONLARI ---
+
+    // Arka plandaki yıldızların hızını ve konumunu rastgale belirlemej
+void initStars() {
+    for (int i = 0; i < MAX_STARS; i++){//yıldızları teker teker ayarlar
+        stars[i].x = rand() % WEIGHT;//yıldızların ekran üzeerindeki rastgale x konumu
+        stars[i].y = rand() % HEIGHT;//yıldızların ekran üzeerindeki rastgale y konumu
+        stars[i].speedX = -(float)(rand() % 15 + 5); // Önde ki eksi yıldızların sağdan dola kayacağını gösterir. Hızlarının değer aralığı= (5-20)
+        stars[i].speedY = (float)(rand() % 40 + 10); // Aşağıdan yukarı doğru kayma hareketi yapar.Hızlarıının değer aralğı(10-50)
+        stars[i].size = (float)(rand() % 2 + 1);     // Yıldızın büyüklüğünü belirler. Değer aralığı(1-3)
+        int shade = rand() % 100 + 50;               // (50-150) arası değer belirler bunu alttaki ifade de renk tonu belirlemke için kullanacağız
+        stars[i].color = (SDL_Color){shade, shade, shade, 255};// kırmızı yeşil ve mavi yerine aynı değerler atandı ki gri renkte olup kullanıcının dikkati dağılmasın. 255 değeri saydamlıktır.
+         }
 }
 
 
