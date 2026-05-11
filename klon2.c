@@ -209,7 +209,7 @@ void initStars() {
 
 
 
-   // Belirtilen koordinatta parçacık saçılımı oluşturur
+     // Belirtilen koordinatta parçacık saçılımı oluşturur
 void spawnExplosion(float x, float y, SDL_Color color, int count) {
     int spawned = 0;
     for (int i = 0; i < MAX_PARTICLES && spawned < count; i++) {
@@ -228,7 +228,20 @@ void spawnExplosion(float x, float y, SDL_Color color, int count) {
     }
 }
 
-
+      // Ekranda yukarı doğru süzülerek kaybolan bilgilendirme yazısı oluşturur
+void spawnPopup(float x, float y, const char* text, SDL_Color color) {
+    for (int i = 0; i < MAX_POPUPS; i++) {
+        if (!popups[i].active) {
+            popups[i].x = x;
+            popups[i].y = y;
+            snprintf(popups[i].text, sizeof(popups[i].text), "%s", text);
+            popups[i].life = 1.5f; // Ekranda 1.5 saniye kalsın
+            popups[i].color = color;
+            popups[i].active = true;
+            break;
+        }
+    }
+}
 
 
 
