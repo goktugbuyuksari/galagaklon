@@ -343,7 +343,21 @@ void takePlayerDamage(int damage) {
 
 
 
+bool checkCollision(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2) {
+    return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);//Hepsi doğru ise çarpışma vardır
+}
 
+void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, float x, float y, SDL_Color color) {//Ekrana yazı yazdırmak için fonksiyon
+    if (!font) return;
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text, 0, color);
+    if (surface) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);//Yazıyı önce geçici şeklilde ram'e yazar.
+        SDL_FRect destRect = { x, y, (float)surface->w, (float)surface->h };//Nerede çıkacağını ve büyüklüğünü gösterir
+        SDL_RenderTexture(renderer, texture, NULL, &destRect);//Hazırlanan yazıyı frame ile eşleştirir
+        SDL_DestroySurface(surface);//Bellek temizlemek için kullanılır
+        SDL_DestroyTexture(texture);//Bellek temizlemek için kullanılır
+    }
+}
 
 
 
