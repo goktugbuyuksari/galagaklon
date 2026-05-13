@@ -243,7 +243,7 @@ void spawnPopup(float x, float y, const char* text, SDL_Color color) {
     }
 }
 
-// Ölen bir düşmandan %15 ihtimalle güçlendirici düşür
+     // Ölen bir düşmandan %15 ihtimalle güçlendirici düşür
 void trySpawnPowerUp(float x, float y) {
     if (rand() % 100 < 15) { // %15 Şans
         for (int i = 0; i < MAX_POWERUPS; i++) {
@@ -251,7 +251,7 @@ void trySpawnPowerUp(float x, float y) {
                 powerups[i].x = x;
                 powerups[i].y = y;
                 powerups[i].speedY = 100.0f; // Yavaşça aşağı düşer
-                powerups[i].type = rand() % 3; // 3 tipten birini rastgele seç
+                powerups[i].type = rand() % 3; // 3 güçlendiriciden birini rastgele seçer
                 powerups[i].active = true;
                 break;
             }
@@ -259,7 +259,62 @@ void trySpawnPowerUp(float x, float y) {
     }
 }
 
+     // Seviyeye bağlı olarak düşmanları rastgele türlerde oluşturur
+void initEnemies(int currentLevel) {
+    formationX = 150.0f;//Başlangıc konumu
+    formationY = 50.0f;//Başlangıc konumu
+    formationSpeedX = 100.0f + (currentLevel * 10.0f);//Başlangıç hızı 100 her seviyede artar
 
+    if (currentLevel % 5 == 0) {//Her 5 seviyede bir boss
+        // --- BOSS BÖLÜMÜ ---
+        isBossLevel = true;
+        enemies[0].offsetX = 0.0f; enemies[0].offsetY = 0.0f;
+        enemies[0].width = 200.0f; enemies[0].height = 100.0f;
+        enemies[0].x = WEIGHT / 2.0f - enemies[0].width / 2.0f; enemies[0].y = formationY;
+        enemies[0].isDiving = false; enemies[0].active = true; enemies[0].isBoss = true;
+        enemies[0].hp = 100 * (currentLevel / 5);//can seviyeye göre ayarlanır
+        enemies[0].attackCooldown = 2.0f;
+        for (int i = 1; i < MAX_ENEMIES; i++) enemies[i].active = false;
+        formationX = enemies[0].x;
+
+     } else {
+        // ---- NORMAL BÖLÜM- ---
+        isBossLevel = false;
+        int rows = 3; int cols = 6;//3x6 lık düşman bölgesi
+        float spacingX = 80.0f; float spacingY = 60.0f;//aralarında 80 ve 60 piksellik boşluk bırakır
+
+        int index = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (index < MAX_ENEMIES) {
+                    enemies[index].offsetX = j * spacingX;//Düşman grubundan uzaklığı
+                    enemies[index].offsetY = i * spacingY;//Düşman grubundan uzaklığı
+                    enemies[index].x = formationX + enemies[index].offsetX;//Merkez noktası
+                    enemies[index].y = formationY + enemies[index].offsetY;//Merkez noktası
+                    enemies[index].width = 30.0f;//Düşman gemisinin hitboxını belirler
+                    enemies[index].height = 20.0f;//Düşman gemisinin hitboxını belirler
+                    enemies[index].isDiving = false;
+                    enemies[index].active = true;
+                    enemies[index].isBoss = false;
+
+                    // Rastgele Düşman Tipi Belirleme (%60 Normal, %20 Hızlı, %20 Zırhlı)
+                    int randType = rand() % 100;//*0-100 arası sayı belirler
+                    if (randType < 60) {//60 dan küçükse normal türden oluşur
+                        enemies[index].type = Type_NORMAL;
+                        enemies[index].hp = 1;
+                    } else if (randType < 80) {//60-80 arası ise hızlı türden oluşur
+                        enemies[index].type = Type_FAST;
+                        enemies[index].hp = 1;
+                    } else {
+                        enemies[index].type = Type_ARMORED;//Geri kalan için zırhlı düşman türünden oluşur
+                        enemies[index].hp = 3; // Zırhlılar 3 vuruşta ölür!
+                    }
+                    index++;
+                }
+            }
+        }
+    }
+}
 
 
 
