@@ -266,6 +266,7 @@ void initEnemies(int currentLevel) {
     formationSpeedX = 100.0f + (currentLevel * 10.0f);//Başlangıç hızı 100 her seviyede artar
 
     if (currentLevel % 5 == 0) {//Her 5 seviyede bir boss
+
         // --- BOSS BÖLÜMÜ ---
         isBossLevel = true;
         enemies[0].offsetX = 0.0f; enemies[0].offsetY = 0.0f;
@@ -277,7 +278,8 @@ void initEnemies(int currentLevel) {
         for (int i = 1; i < MAX_ENEMIES; i++) enemies[i].active = false;
         formationX = enemies[0].x;
 
-     } else {
+}         else {
+
         // ---- NORMAL BÖLÜM- ---
         isBossLevel = false;
         int rows = 3; int cols = 6;//3x6 lık düşman bölgesi
@@ -316,6 +318,25 @@ void initEnemies(int currentLevel) {
     }
 }
 
+
+       // Oyuncunun hasar alma fonksiyonu
+void takePlayerDamage(int damage) {
+    // Eğer oyuncunun kalkanı varsa veya dokunulmazsa hasar almaz
+    if (player.invulnerabilityTimer <= 0.0f && player.shieldTimer <= 0.0f) {
+        player.hp -= damage;
+        player.invulnerabilityTimer = 3.0f;
+
+        if (player.hp <= 0) {
+            player.lives--;
+            if (player.lives > 0) {
+                player.hp = 100;
+            } else {
+                player.hp = 0;
+                isGameOver = true;
+            }
+        }
+    }
+}
 
 
 
