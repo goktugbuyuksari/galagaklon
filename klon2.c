@@ -228,22 +228,36 @@ void spawnExplosion(float x, float y, SDL_Color color, int count) {
     }
 }
 
-      // Ekranda yukarı doğru süzülerek kaybolan bilgilendirme yazısı oluşturur
+      // Ekranda süzülerek kaybolan bilgilendirme yazılarını gösterir
 void spawnPopup(float x, float y, const char* text, SDL_Color color) {
     for (int i = 0; i < MAX_POPUPS; i++) {
         if (!popups[i].active) {
-            popups[i].x = x;
-            popups[i].y = y;
-            snprintf(popups[i].text, sizeof(popups[i].text), "%s", text);
-            popups[i].life = 1.5f; // Ekranda 1.5 saniye kalsın
-            popups[i].color = color;
-            popups[i].active = true;
+            popups[i].x = x;//yazının çıkacağı x ekseni
+            popups[i].y = y;//yazının çıkacağı y ekseni
+            snprintf(popups[i].text, sizeof(popups[i].text), "%s", text);//snprintf taşma yapmadan oyunu çökertmeden güvenli bir şekilde girilen yazıyı kopyalamak için kullanılır
+            popups[i].life = 1.5f; // Ekranda kalacağı süre
+            popups[i].color = color; //yazının rengi
+            popups[i].active = true;//aktif hale getirir
             break;
         }
     }
 }
 
-
+// Ölen bir düşmandan %15 ihtimalle güçlendirici düşür
+void trySpawnPowerUp(float x, float y) {
+    if (rand() % 100 < 15) { // %15 Şans
+        for (int i = 0; i < MAX_POWERUPS; i++) {
+            if (!powerups[i].active) {
+                powerups[i].x = x;
+                powerups[i].y = y;
+                powerups[i].speedY = 100.0f; // Yavaşça aşağı düşer
+                powerups[i].type = rand() % 3; // 3 tipten birini rastgele seç
+                powerups[i].active = true;
+                break;
+            }
+        }
+    }
+}
 
 
 
