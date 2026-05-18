@@ -9,7 +9,7 @@
                                         // --- OYUN AYARLARI VE SABÝTLERÝ ---
 
 
-#define WEIGHT 800           // Oyunun geniþliði.
+#define WIDTH 800           // Oyunun geniþliði.
 #define HEIGHT 600          // Oyunun yüksekliði.
 #define MAX_BULLETS 200     // Ekranda ayný anda bulunabilecek maksimum mermi sayýsý.
 #define MAX_ENEMIES 18      // Ekranda bulunabilecek maksimum düþman sayýsý. (Burada 3 satýr x 6 sütun þeklindedir.)
@@ -158,7 +158,7 @@ float formationSpeedX=50.0f;
 
               //---Yardımcı Fonksiyonlar---
 
-int loadHighsScore(){
+int loadHighScore(){
 FILE*file=fopen("highscore.txt","r");//En yüksek skorun kalıcı olması sağlandı.
 int hs=0;
 if(file){fscanf(file,"%d",&hs);//highscore.txt dosyası yok ise en yüksek skor 0 dan başlar.
@@ -196,7 +196,7 @@ void shootBullet(float x, float y, float w, float h, float speedX, float speedY,
     // Arka plandaki yıldızların hızını ve konumunu rastgale belirler
 void initStars() {
     for (int i = 0; i < MAX_STARS; i++){//yıldızları teker teker ayarlar
-        stars[i].x = rand() % WEIGHT;//yıldızların ekran üzeerindeki rastgale x konumu
+        stars[i].x = rand() % WIDTH;//yıldızların ekran üzeerindeki rastgale x konumu
         stars[i].y = rand() % HEIGHT;//yıldızların ekran üzeerindeki rastgale y konumu
         stars[i].speedX = -(float)(rand() % 15 + 5); // Önde ki eksi yıldızların sağdan dola kayacağını gösterir. Hızlarının değer aralığı= (5-20)
         stars[i].speedY = (float)(rand() % 40 + 10); // Aşağıdan yukarı doğru kayma hareketi yapar.Hızlarıının değer aralğı(10-50)
@@ -271,7 +271,7 @@ void initEnemies(int currentLevel) {
         isBossLevel = true;
         enemies[0].offsetX = 0.0f; enemies[0].offsetY = 0.0f;
         enemies[0].width = 200.0f; enemies[0].height = 100.0f;
-        enemies[0].x = WEIGHT / 2.0f - enemies[0].width / 2.0f; enemies[0].y = formationY;
+        enemies[0].x = WIDTH / 2.0f - enemies[0].width / 2.0f; enemies[0].y = formationY;
         enemies[0].isDiving = false; enemies[0].active = true; enemies[0].isBoss = true;
         enemies[0].hp = 100 * (currentLevel / 5);//can seviyeye göre ayarlanır
         enemies[0].attackCooldown = 2.0f;
@@ -428,6 +428,466 @@ void drawBossShip(SDL_Renderer* renderer, float x, float y, float w, float h) {
 
 int main(int argc, char* argv[]) {
 
+ srand((unsigned int)time(NULL));//Rastgelelik motor zamanı sabitleme.Eğer yapılmazsa oyun her açıldığında aynı şeyleri tekrarlar.
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) return -1;
+    if (!TTF_Init()) return -1;
+
+    SDL_Window* window = SDL_CreateWindow("Galaga Klonu", WIDTH, HEIGHT, SDL_WINDOW_FULLSCREEN);//Tam ekran açma
+    if (!window) return -1;
+    SDL_HideCursor();//Fare imblecini saklamak
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);//Pencere ile ekran kartı arasında bir köprü oluşturur.
+    if (!renderer) return -1;
+    SDL_SetRenderLogicalPresentation(renderer, WIDTH, HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);//Her ekranda tam ekran oynayabilmek için kullanılır
+
+    TTF_Font* font = TTF_OpenFont("arial.ttf", 20.0f);//Windowstan aldığım yazı tipinin bouyutu <(20px)
+    TTF_Font* fontSmall = TTF_OpenFont("arial.ttf", 12.0f);//Windowstan aldığım yazı tipinin bouyutu (12px)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -465,7 +925,41 @@ int main(int argc, char* argv[]) {
 
 
     return 0;
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
