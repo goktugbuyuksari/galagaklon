@@ -360,6 +360,57 @@ void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, float 
 }
 
 
+                                    // --- ÇİZİM FONKSİYONLARI ---
+
+void drawPlayerShip(SDL_Renderer* renderer, float x, float y, float w, float h) {
+    SDL_FRect core = { x + w * 0.4f, y, w * 0.2f, h };//Ana gövde
+    SDL_FRect wings = { x, y + h * 0.5f, w, h * 0.2f };//kanatlar
+    SDL_FRect leftGun = { x, y + h * 0.2f, w * 0.1f, h * 0.6f };//Sol silah
+    SDL_FRect rightGun = { x + w * 0.9f, y + h * 0.2f, w * 0.1f, h * 0.6f };//Sağ silah
+    SDL_RenderFillRect(renderer, &core);//Boyama aşaması
+    SDL_RenderFillRect(renderer, &wings);//Boyama aşaması
+    SDL_RenderFillRect(renderer, &leftGun);//Boyama aşaması
+    SDL_RenderFillRect(renderer, &rightGun);//Boyama aşaması
+}
+
+// TİP 1: Normal Düşman (Kırmızı)
+void drawNormalEnemy(SDL_Renderer* renderer, float x, float y, float w, float h) {
+    SDL_FRect brain = { x + w * 0.2f, y, w * 0.6f, h * 0.5f };//Ana gövde
+    SDL_FRect wings = { x, y + h * 0.2f, w, h * 0.3f };//Kanatlar
+    SDL_FRect leftLeg = { x + w * 0.2f, y + h * 0.5f, w * 0.2f, h * 0.4f };//Sağ silah
+    SDL_FRect rightLeg = { x + w * 0.6f, y + h * 0.5f, w * 0.2f, h * 0.4f };//Sol silah
+    SDL_RenderFillRect(renderer, &brain); SDL_RenderFillRect(renderer, &wings);//Boyama işlemi
+    SDL_RenderFillRect(renderer, &leftLeg); SDL_RenderFillRect(renderer, &rightLeg);//Boyama işlemi
+}
+
+// TİP 2: Hızlı/Avcı Düşman (Yeşil)
+void drawFastEnemy(SDL_Renderer* renderer, float x, float y, float w, float h) {
+    SDL_FRect core = { x + w * 0.4f, y, w * 0.2f, h }; //Ana gövde
+    SDL_FRect wings = { x + w * 0.2f, y, w * 0.6f, h * 0.3f }; //Kanatlar
+    SDL_RenderFillRect(renderer, &core); SDL_RenderFillRect(renderer, &wings);//Boyama aşaması
+}
+
+// TİP 3: Zırhlı üşman (Mavi)
+void drawArmoredEnemy(SDL_Renderer* renderer, float x, float y, float w, float h) {
+    SDL_FRect core = { x, y, w, h * 0.8f }; //A na gövde
+    SDL_FRect cannon = { x + w * 0.3f, y + h * 0.8f, w * 0.4f, h * 0.2f }; //Silahlık
+    SDL_RenderFillRect(renderer, &core); SDL_RenderFillRect(renderer, &cannon);//Boyama aşamsı
+}
+
+void drawBossShip(SDL_Renderer* renderer, float x, float y, float w, float h) {
+    SDL_FRect core = { x + w * 0.3f, y + h * 0.2f, w * 0.4f, h * 0.6f };//Ana gövde
+    SDL_FRect wings = { x, y, w, h * 0.3f };//Kanatlar
+    SDL_FRect leftGun = { x + w * 0.1f, y + h * 0.3f, w * 0.15f, h * 0.7f };//Sol silah
+    SDL_FRect rightGun = { x + w * 0.75f, y + h * 0.3f, w * 0.15f, h * 0.7f };//Sağ silah
+    SDL_FRect eye = { x + w * 0.45f, y + h * 0.4f, w * 0.1f, h * 0.2f };//Göz
+
+    SDL_SetRenderDrawColor(renderer, 200, 0, 255, SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRect(renderer, &wings); SDL_RenderFillRect(renderer, &leftGun); SDL_RenderFillRect(renderer, &rightGun);
+    SDL_SetRenderDrawColor(renderer, 100, 0, 100, SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRect(renderer, &core);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRect(renderer, &eye);
+}
 
 
 
@@ -372,10 +423,7 @@ void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, float 
 
 
 
-
-
-
-
+                                                   //-------ANA FONKSİYON-----
 
 
 int main(int argc, char* argv[]) {
