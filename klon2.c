@@ -447,6 +447,30 @@ int main(int argc, char* argv[]) {
 
 
 
+           // --- BAŞLANGIÇ AYARLARI ---
+    player.width = 40.0f; player.height = 30.0f;
+    player.x = WIDTH / 2.0f - player.width / 2.0f; player.y = HEIGHT - 50.0f;//Tam ortaya hizalama
+    player.speed = 300.0f; player.cooldown = 0.0f; player.lives = 2; player.hp = 100;
+    player.ammo = 60; player.ammoTimer = 0.0f; player.invulnerabilityTimer = 0.0f;
+    player.shieldTimer = 0.0f; player.rapidFireTimer = 0.0f;
+
+    for (int i = 0; i < MAX_BULLETS; i++) bullets[i].active = false;
+    for (int i = 0; i < MAX_ENEMIES; i++) enemies[i].active = false;
+    for (int i = 0; i < MAX_PARTICLES; i++) particles[i].active = false;
+    for (int i = 0; i < MAX_POWERUPS; i++) powerups[i].active = false;
+    for (int i = 0; i < MAX_POPUPS; i++) popups[i].active = false;
+
+    initStars(); // Yıldızları başlat
+    initEnemies(level);//Level ekler
+    highScore = loadHighScore();//High score varsa yazdırır
+
+    bool running = true;
+    SDL_Event event;//Klavyeden okuma yapar
+    Uint64 lastTime = SDL_GetTicks();//Zamanı kaydeder ve ne kadar yavaş bir bilgisayar olsa bile donmadan oynatabilir
+
+
+
+   // =           ANA OYUN DÖNGÜSÜ             =
 
 
 
