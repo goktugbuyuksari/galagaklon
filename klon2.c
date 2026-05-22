@@ -470,20 +470,77 @@ int main(int argc, char* argv[]) {
 
 
 
-   // =           ANA OYUN DÖNGÜSÜ             =
+                                            // =           ANA OYUN DÖNGÜSÜ             =
 
 
 
+    while (running) {
+        Uint64 currentTime = SDL_GetTicks();//SDL motoru başladığından beri kaç milisaniye geçtiğini söyler
+        float dt = (currentTime - lastTime) / 1000.0f;//Frameler arası süreyi belirler
+        lastTime = currentTime;//Değer güncellemesi yapar
 
 
 
+        while (SDL_PollEvent(&event)) {//Tüm girişleri alır ve sırasıyla işler
+            if (event.type == SDL_EVENT_QUIT) running = false;//Çarpı ile kapatmak
+            if (event.type == SDL_EVENT_KEY_DOWN) {
+                if (event.key.key == SDLK_ESCAPE) running = false;//ESC tuşu ile oyunu kapatmak
 
+                // ÇOKLU ATIŞ (T)
+                if (event.key.key == SDLK_T && !isGameOver) {
+                    if (player.cooldown <= 0.0f && player.ammo >= 3) {
+                        float midX = player.x + player.width / 2.0f - 2.0f;//Midx merminin tam geminin ortasından çıkmasını sağlar
+                        shootBullet(midX, player.y, 4.0f, 15.0f, 0.0f, -600.0f, false, 10);//Yukarı yönde ateşlenir
+                        shootBullet(midX, player.y, 4.0f, 15.0f, -150.0f, -600.0f, false, 10);//Sola çapraz ateşlenir
+                        shootBullet(midX, player.y, 4.0f, 15.0f, 150.0f, -600.0f, false, 10);//Sağa çapraz ateşlenir
+                        player.cooldown = 0.6f;//0,6 saniyelik cooldown eklenir
+                        player.ammo -= 3;//Mermi sayısı her defasında 3 azaltılır
+                    }
+                }
 
+                if (event.key.key == SDLK_R && isGameOver) {//Güvenlik şartı
+                    isGameOver = false; score = 0; level = 1; enemiesKilled = 0;//Tekrardan başlatıldığı için sıfırlar
+                    player.lives = 2; player.hp = 100; player.ammo = 60;//Oyuncuyu başlangıç değerlerine ayarlar
+                    player.ammoTimer = 0.0f; player.invulnerabilityTimer = 0.0f;
+                    player.shieldTimer = 0.0f; player.rapidFireTimer = 0.0f;
+                    player.x = WIDTH / 2.0f - player.width / 2.0f; player.y = HEIGHT - 50.0f;
+                    for (int i = 0; i < MAX_BULLETS; i++) bullets[i].active = false;//Hafıza temizliği yapılır
+                    for (int i = 0; i < MAX_PARTICLES; i++) particles[i].active = false;
+                    for (int i = 0; i < MAX_POWERUPS; i++) powerups[i].active = false;
+                    initEnemies(level);//Düşmanları yeniden dizer
+                }
+            }
+        }
 
+        const bool* state = SDL_GetKeyboardState(NULL);//Kesintisiz iletişim sağlar
 
+        if (!isGameOver) {
+            //NORMAL ATEŞ ETME(space)
+            if (state[SDL_SCANCODE_SPACE]) {//Akıllı ateşleme sistemi eğer güçlendirici varsa 0,08 saniyede ateş eder yoksa 0,25 saniyede etmeye devam eder
+                // Eğer seri atış güçlendiricisi aktifse cooldown yokmuş gibi davranır
+                float requiredCooldown = (player.rapidFireTimer > 0.0f) ? 0.08f : 0.25f;
+                bool freeAmmo = (player.rapidFireTimer > 0.0f);
 
+                if (player.cooldown <= 0.0f && (player.ammo >= 1 || freeAmmo)) {
+                    float midX = player.x + player.width / 2.0f - 2.0f;
+                    shootBullet(midX, player.y, 4.0f, 15.0f, 0.0f, -600.0f, false, 10);
+                    player.cooldown = requiredCooldown;
+                    if (!freeAmmo) player.ammo -= 1; // Ücretsiz değilse mermi düş
+                }
+            }
 
+            // OYUNCU HAREKETİ
+            if (state[SDL_SCANCODE_A]) player.x -= player.speed * dt;//Sola hareket
+            if (state[SDL_SCANCODE_D]) player.x += player.speed * dt;//Sağa hareket
+            if (state[SDL_SCANCODE_W]) player.y -= player.speed * dt;//Yukarı hareket
+            if (state[SDL_SCANCODE_S]) player.y += player.speed * dt;//Aşağı hareket
 
+            if (player.x < 0) player.x = 0;//Oyuncunun ekrandan çıkması engellenir
+            if (player.x > WIDTH - player.width) player.x = WIDTH - player.width;
+            float maxY = HEIGHT - 50.0f;
+            float minY = HEIGHT - 150.0f;
+            if (player.y < minY) player.y = minY;
+            if (player.y > maxY) player.y = maxY;
 
 
 
@@ -948,10 +1005,14 @@ int main(int argc, char* argv[]) {
 
 
 
+
+
+
+        }
     return 0;
 
 
-}
+
 
 
 
