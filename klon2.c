@@ -544,15 +544,49 @@ int main(int argc, char* argv[]) {
 
 
 
+             // SAYAÇ GÜNCELLEMELERİ
+            if (player.cooldown > 0.0f) player.cooldown -= dt;//Cooldown süresi
+            if (player.invulnerabilityTimer > 0.0f) player.invulnerabilityTimer -= dt;//Ölümsüzlük süresi(hasar alındığında veya yeniden doğduğunda)
+            if (player.shieldTimer > 0.0f) player.shieldTimer -= dt;//Kalkan süresi
+            if (player.rapidFireTimer > 0.0f) player.rapidFireTimer -= dt;//Seri atış süresi
 
+            player.ammoTimer += dt;
+            if (player.ammoTimer >= 3.0f) { player.ammo += 1; player.ammoTimer -= 3.0f; }//3 saniyede bir mermi ekler
 
 
 
+           // ARKA PLAN ANİMASYONU
+            for (int i = 0; i < MAX_STARS; i++) {
+                stars[i].x += stars[i].speedX * dt;
+                stars[i].y += stars[i].speedY * dt;
+               //Ekrana geri yönlendirme
+                if (stars[i].y > HEIGHT || stars[i].x < 0) {
+                    stars[i].x = (float)(rand() % WIDTH + 100); // Sağdan daha çok gelir
+                    stars[i].y = -(float)(rand() % 100);        // Üstten gelir
+                }
+            }
 
 
+            // PATLAMA EFEKTİ
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (particles[i].active) {
+                    particles[i].x += particles[i].speedX * dt;
+                    particles[i].y += particles[i].speedY * dt;
+                    particles[i].life -= dt;
+                    if (particles[i].life <= 0.0f) particles[i].active = false; // Ömrü dolduğunda silinir
+                }
+            }
 
 
 
+              // EKRANDAKİ HAREKETLİ YAZILAR
+            for (int i = 0; i < MAX_POPUPS; i++) {
+                if (popups[i].active) {
+                    popups[i].y -= 30.0f * dt; //Yavaşça yukarı süzülür
+                    popups[i].life -= dt;
+                    if (popups[i].life <= 0.0f) popups[i].active = false;
+                }
+            }
 
 
 
@@ -1008,8 +1042,18 @@ int main(int argc, char* argv[]) {
 
 
 
-        }
+
+
+
+
+
+
+
+
+
+       } }
     return 0;
+    }
 
 
 
