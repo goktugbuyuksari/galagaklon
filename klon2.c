@@ -714,7 +714,23 @@ int main(int argc, char* argv[]) {
 
 
 
+                      //  Hitbox Yapısı
+                    float px = player.x + player.width * 0.3f; float py = player.y + player.height * 0.3f;//Sağdan ve soldan %30 arlık boşluk bıraktım
+                    float pw = player.width * 0.4f; float ph = player.height * 0.6f;//Genişliği %40 olarak ayarlandı Yüksekliği %60 olarak ayarlandı
+                    float ex = enemies[i].x + enemies[i].width * 0.1f; float ey = enemies[i].y + enemies[i].height * 0.1f;//Düşman hitboxı %10 u kadar ayarlandı
+                    float ew = enemies[i].width * 0.8f; float eh = enemies[i].height * 0.8f;
 
+                    if (checkCollision(px, py, pw, ph, ex, ey, ew, eh)) {
+                        if (!enemies[i].isBoss) enemies[i].isDiving = false;
+                        // Çarpma hasarı tipe göre
+                        int crashDmg = 25;
+                        if (enemies[i].isBoss) crashDmg = 50;
+                        if (enemies[i].type == Type_ARMORED) crashDmg = 40;
+                        if (enemies[i].type == Type_FAST) crashDmg = 10;
+                        takePlayerDamage(crashDmg);
+                    }
+                }
+            }
 
 
 
@@ -1165,7 +1181,8 @@ int main(int argc, char* argv[]) {
 
 
 
-            }}}
+
+            }
 
     return 0;}
 
