@@ -651,9 +651,31 @@ int main(int argc, char* argv[]) {
 
 
 
+                //  DÜŞMAN GÜNCELLEMELERİ
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (enemies[i].active) {
 
+                    if (!enemies[i].isDiving) {
+                        enemies[i].x = formationX + enemies[i].offsetX;//Düşman grubunu hizalar
+                        enemies[i].y = formationY + enemies[i].offsetY;//Düşman grubunu hizalar
 
+                        // Zırhlı düşmanlar dalış yapmazlar. Hızlı olanlar daha sık dalar.
+                        int diveChance = (enemies[i].type == Type_FAST) ? 3 : (enemies[i].type == Type_ARMORED) ? 0 : 1;//Hızlı düşman için 3, normal için 2,zırhlı için 0 olarak ayarlandı
+                        if (!enemies[i].isBoss && divingCount < 5 && rand() % 1000 < (diveChance + level)) {//Dalışa geçme şartları
+                            enemies[i].isDiving = true;
+                            divingCount++;
+                        }
+                    } else {
+                        // Türe göre dalış hızı ayarı
+                        float diveSpeedMult = (enemies[i].type == Type_FAST) ? 1.8f : (enemies[i].type == Type_ARMORED) ? 0.6f : 1.0f;
+                        enemies[i].y += (150.0f + level * 10.0f) * diveSpeedMult * dt;
 
+                        if (enemies[i].y > HEIGHT) {
+                            enemies[i].isDiving = false;
+                            enemies[i].y = formationY + enemies[i].offsetY;
+                        }
+                    }
+                }
 
 
 
@@ -1107,9 +1129,13 @@ int main(int argc, char* argv[]) {
 
 
 
-       } }
-    return 0;
-    }
+
+
+
+            }}}
+
+    return 0;}
+
 
 
 
