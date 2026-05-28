@@ -153,6 +153,7 @@ bool isGameOver= false;
 float formationX=75.0f;
 float formationY=25.0f;
 float formationSpeedX=50.0f;
+int formationDirection = 1;
 
 
 
@@ -590,6 +591,61 @@ int main(int argc, char* argv[]) {
 
 
 
+
+               // GÜÇLENDİRİCİLER
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                if (powerups[i].active) {
+                    powerups[i].y += powerups[i].speedY * dt; // Aşağı doğru süzülür
+                    if (powerups[i].y > HEIGHT) powerups[i].active = false; // Ekrandan çıktı
+
+                    // Oyuncu güçlendiriciyi aldımı kontrol
+                    if (checkCollision(player.x, player.y, player.width, player.height, powerups[i].x, powerups[i].y, 15.0f, 15.0f)) {
+                        powerups[i].active = false;
+                        score += 50; // Kutu alınca eklenen skor
+
+                        // Türüne göre güçlendirici verip bilgisini ekranda göster
+                        SDL_Color c;
+                        if (powerups[i].type == Power_SHIELD) {
+                            player.shieldTimer = 10.0f; // 10 Saniye kalkan
+                            c = (SDL_Color){0, 150, 255, 255};
+                            spawnPopup(player.x, player.y - 20.0f, "+Kalkan! (10s)", c);
+                        } else if (powerups[i].type == Power_RAPIDFIRE) {
+                            player.rapidFireTimer = 5.0f; // 5 Saniye seri atış
+                            c = (SDL_Color){255, 200, 0, 255};
+                            spawnPopup(player.x, player.y - 20.0f, "+Seri Atis! (5s)", c);
+                        } else {
+                            player.ammo += 30; // +30 Mermi
+                            c = (SDL_Color){0, 255, 0, 255};
+                            spawnPopup(player.x, player.y - 20.0f, "+30 Cephane!", c);
+                        }
+                    }
+                }
+            }
+
+
+
+
+
+            //       FORMASYON HAREKETİ
+            formationX += formationSpeedX * formationDirection * dt;//Merkez noktasına göre ortak hız olarak ayarlandı
+            bool hitEdge = false;
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (enemies[i].active && !enemies[i].isDiving) {
+                    float currentEnemyX = formationX + enemies[i].offsetX;
+                    if (currentEnemyX <= 0 && formationDirection == -1) { hitEdge = true; break; }
+                    if (currentEnemyX + enemies[i].width >= WIDTH && formationDirection == 1) { hitEdge = true; break; }//Tek bir düşman kenara çarparsa tüm filo başlangıç konumuna gider
+                }
+            }
+            if (hitEdge) formationDirection *= -1;//Duvara çarparsa yön değişir
+
+            int activeEnemiesCount = 0;
+            int divingCount = 0;
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (enemies[i].active) {
+                    activeEnemiesCount++;
+                    if (enemies[i].isDiving) divingCount++;
+                }
+            }
 
 
 
