@@ -679,6 +679,39 @@ int main(int argc, char* argv[]) {
 
 
 
+                   // Düşman Atış Mekanizması
+                    if (enemies[i].isBoss) {
+                        enemies[i].attackCooldown -= dt;
+                        if (enemies[i].attackCooldown <= 0.0f) {
+                            int bossDmg = 30 + (level * 3);//Hasar sabit kalmaz artar
+                            float centerX = enemies[i].x + enemies[i].width / 2.0f;
+                            float bY = enemies[i].y + enemies[i].height;
+                            int attackType = rand() % 100;
+
+                            if (attackType < 25) {//%25 ihtimalle 3 mermi fırlatır
+                                shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, 0.0f, 400.0f, true, bossDmg / 2);
+                                shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, -60.0f, 400.0f, true, bossDmg / 2);
+                                shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, 60.0f, 400.0f, true, bossDmg / 2);
+                            } else {
+                                shootBullet(centerX - 12.0f, bY, 24.0f, 45.0f, 0.0f, 400.0f, true, bossDmg);//%75 ihtimalle tek mermi fırlatır
+                            }
+
+                            enemies[i].attackCooldown = 1.5f + (rand() % 100) / 100.0f - (level * 0.02f);//Giderek boss leveli zorlaşır
+                            if(enemies[i].attackCooldown < 0.5f) enemies[i].attackCooldown = 0.5f;
+                        }
+                    } else {
+                        // Normal-Zırhlı düşmanlar ateş eder Zırhlılar daha az ama güçlü atar
+                        if (rand() % 4000 < (1 + level)) {//Level arttıkça ateş etme sıklığı artar
+                            int enemyDmg = 10 + (level * 2);//Level arttıkça hasar artar
+                            if (enemies[i].type == Type_ARMORED) enemyDmg *= 2; // Zırhlı 2 kat hasar vurur
+                            if (enemies[i].type == Type_FAST) enemyDmg /= 2;    // Hızlı yarım hasar vurur
+
+                            shootBullet(enemies[i].x + enemies[i].width / 2.0f - 3.0f, enemies[i].y + enemies[i].height,
+                                        6.0f, 15.0f, 0.0f, 300.0f + (level * 10.0f), true, enemyDmg);//Mermi hızı level arttıkça artar
+                        }
+                    }
+
+
 
 
 
