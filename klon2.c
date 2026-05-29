@@ -820,10 +820,28 @@ int main(int argc, char* argv[]) {
 
 
 
+           //////////////////////////////////////////////
+            // =           EKRAN ÇİZİM AŞAMASI          =
+          //////////////////////////////////////////////
 
+        SDL_SetRenderDrawColor(renderer, 10, 10, 20, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer);//Tüm ekranı boyar ve temizlemiş olur
 
+        // 1) ARKA PLAN YILDIZ ÇİZİMİ
+        for (int i = 0; i < MAX_STARS; i++) {
+            SDL_SetRenderDrawColor(renderer, stars[i].color.r, stars[i].color.g, stars[i].color.b, stars[i].color.a);//Gri tonu atanır
+            SDL_FRect sRect = { stars[i].x, stars[i].y, stars[i].size, stars[i].size };//Yıldıza kalıp çıkartır
+            SDL_RenderFillRect(renderer, &sRect);//İçini boyar ve ekranda görünür
+        }
 
+           if (!isGameOver) {
+           // 2) OYUNCU ÇİZİMİ
+            if (player.invulnerabilityTimer <= 0.0f || (int)(player.invulnerabilityTimer * 8) % 2 == 0) {//Hasar almaz olduğu zaman yanıp söner
+                int r = 255 - (player.hp * 2.5f); if(r<0) r=0; if(r>255) r=255;//Gemi tam canlıyken açık mavi renktedir sağlık azaldıkça kırmızı mor renklere dönerek ölüyorsun izlemini yaratır
+                int g = player.hp * 2.0f; if(g>200) g=200;
+                SDL_SetRenderDrawColor(renderer, r, g, 255, SDL_ALPHA_OPAQUE);
 
+                drawPlayerShip(renderer, player.x, player.y, player.width, player.height);//Geminin üzerine işlenir boyanır
 
 
 
@@ -1261,6 +1279,9 @@ int main(int argc, char* argv[]) {
 
 
 
+
+
+            }}
     return 0;}
 
 
