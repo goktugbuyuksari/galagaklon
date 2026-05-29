@@ -714,7 +714,7 @@ int main(int argc, char* argv[]) {
 
 
 
-                      //  Hitbox Yapısı
+                      //  HİTBOX AŞAMASI
                     float px = player.x + player.width * 0.3f; float py = player.y + player.height * 0.3f;//Sağdan ve soldan %30 arlık boşluk bıraktım
                     float pw = player.width * 0.4f; float ph = player.height * 0.6f;//Genişliği %40 olarak ayarlandı Yüksekliği %60 olarak ayarlandı
                     float ex = enemies[i].x + enemies[i].width * 0.1f; float ey = enemies[i].y + enemies[i].height * 0.1f;//Düşman hitboxı %10 u kadar ayarlandı
@@ -722,7 +722,7 @@ int main(int argc, char* argv[]) {
 
                     if (checkCollision(px, py, pw, ph, ex, ey, ew, eh)) {
                         if (!enemies[i].isBoss) enemies[i].isDiving = false;
-                        // Çarpma hasarı tipe göre
+                        // ÇARPMA HASARI TÜRE GÖRE
                         int crashDmg = 25;
                         if (enemies[i].isBoss) crashDmg = 50;
                         if (enemies[i].type == Type_ARMORED) crashDmg = 40;
@@ -733,6 +733,36 @@ int main(int argc, char* argv[]) {
             }
 
 
+
+            if (activeEnemiesCount == 0) {
+                score += 500 * level;
+                level++;//level arttıkça 500 puan ekler
+                initEnemies(level);
+            }
+
+
+
+
+
+               //  MERMİ GÜNCELLEMELERİ VE VURDU MU DİYE KONTROL ETME
+            for (int i = 0; i < MAX_BULLETS; i++) {
+                if (bullets[i].active) {
+                    bullets[i].x += bullets[i].speedX * dt;//X ekseninde zamana göre ilerler
+                    bullets[i].y += bullets[i].speedY * dt;//Y ekseninde zamana göre ilerler
+
+                    if (bullets[i].y < 0 || bullets[i].y > HEIGHT || bullets[i].x < 0 || bullets[i].x > WIDTH) {//Mermi ekrandan çıkmışsa false yapar ve siler
+                        bullets[i].active = false;
+                        continue;//İşlemciyi gereksiz yere yormaz
+                    }
+
+                    if (!bullets[i].isEnemyBullet) {
+                        for (int j = 0; j < MAX_ENEMIES; j++) {//Attığımız mermileri düşmanlara tek tek değdi mi diye kontrol eder
+                            float ex = enemies[j].x + enemies[j].width * 0.1f; float ey = enemies[j].y + enemies[j].height * 0.1f;//Düşmanların hitboxları daraltılmıştır
+                            float ew = enemies[j].width * 0.8f; float eh = enemies[j].height * 0.8f;
+
+                            if (enemies[j].active && checkCollision(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height, ex, ey, ew, eh)) {
+                                bullets[i].active = false;
+                                enemies[j].hp -= bullets[i].damage;//Düşmanın canından merminin hasarı çıkartılır
 
 
 
