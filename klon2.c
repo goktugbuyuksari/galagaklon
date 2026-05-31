@@ -877,9 +877,52 @@ int main(int argc, char* argv[]) {
                 renderText(renderer, fontSmall, hpBarText, player.x + player.width / 2.0f - 10.0f, player.y - 28.0f, greenColor);//Barın tam ortasına hizalanmasını sağlar
             }
 
+           // 3) GÜÇLENDİRİCİ KUTULARI ÇİZİMİ
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                if (powerups[i].active) {
+                    char pText[2];//2 olmasının nedeni \0 eklenmesidir
+                    if (powerups[i].type == Power_SHIELD) {
+                        SDL_SetRenderDrawColor(renderer, 0, 150, 255, SDL_ALPHA_OPAQUE); // Kalkan (Mavi)
+                        sprintf(pText, "K");//Kalkan için K harfi ve mavi renk kullanıldı
+                    } else if (powerups[i].type == Power_RAPIDFIRE) {
+                        SDL_SetRenderDrawColor(renderer, 255, 200, 0, SDL_ALPHA_OPAQUE); // Seri Atış (Sarı)
+                        sprintf(pText, "S");//Seri atış için S harfi ve turuncu renk kullanıldı
+                    } else {
+                        SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);   // Mermi (Yeşil)
+                        sprintf(pText, "M");//Ekstra mermi içim M harf, ve yeşil renk kullanıldı
+                    }
 
+                    SDL_FRect pRect = { powerups[i].x, powerups[i].y, 15.0f, 15.0f };//15x15 lik kutu oluşturuklup içine güçlendiricinin harfi yazılır
+                    SDL_RenderFillRect(renderer, &pRect);
 
+                    // Kutunun üstüne harfini yaz
+                    SDL_Color black = {0,0,0,255};
+                    renderText(renderer, fontSmall, pText, powerups[i].x + 3.0f, powerups[i].y, black);
+                }
+            }
 
+              // 4) DÜŞMAN ÇİZİMLERİ
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (enemies[i].active) {
+                    if (enemies[i].isBoss) {
+                        drawBossShip(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);//Daha önceden yazdığım fonksiyonu çağırır
+                        char bossHpText[30]; sprintf(bossHpText, "BOSS HP: %d", enemies[i].hp);//Sprintf ile can değeri metne çevrilip kırmızı renkte yazılır
+                        SDL_Color bColor = {255, 0, 0, 255};
+                        renderText(renderer, font, bossHpText, enemies[i].x + 30.0f, enemies[i].y - 30.0f, bColor);
+                    } else {
+                        if (enemies[i].type == Type_FAST) {
+                            SDL_SetRenderDrawColor(renderer, 50, 255, 50, SDL_ALPHA_OPAQUE); // Hızlı olan düşmanlar yeşil olarak ayarlandı
+                            drawFastEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+                        } else if (enemies[i].type == Type_ARMORED) {
+                            SDL_SetRenderDrawColor(renderer, 50, 150, 255, SDL_ALPHA_OPAQUE); // Zırhlı olan düşmanlar mavi olarak ayarlanadı
+                            drawArmoredEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+                        } else {
+                            SDL_SetRenderDrawColor(renderer, 255, 50, 50, SDL_ALPHA_OPAQUE); // Normal düşmanlar kırmızı ayarlandı
+                            drawNormalEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+                        }
+                    }
+                }
+            }
 
 
 
