@@ -172,7 +172,11 @@ int loadHighScore()
     int hs=0;
     if(file)
     {
-        fscanf(file,"%d",&hs);//highscore.txt dosyası yok ise en yüksek skor 0 dan başlar.
+        char buffer[32];
+        if (fgets(buffer, sizeof(buffer), file))   // Taşmaları önleyen güvenli satır okuması
+        {
+            hs = atoi(buffer); // Okunan metni güvenlice sayıya çevirir
+        }
         fclose(file);
     }
     return hs;
@@ -195,20 +199,21 @@ void shootBullet(float x, float y, float w, float h, float speedX, float speedY,
 {
     for (int i = 0; i < MAX_BULLETS; i++)  //define ile oluşturduğumuz 200 mermilik diziyi baştan sonra tarar
     {
-        if (!bullets[i].active) //aktif olmayan mermi dizisini arar{
+        if (!bullets[i].active)  //aktif olmayan mermi dizisini arar
+        {
             bullets[i].x = x;
-        bullets[i].y = y;
-        bullets[i].width = w;
-        bullets[i].height = h;//merminin özellikleri
-        bullets[i].speedX = speedX;
-        bullets[i].speedY = speedY;//Merminin X ve Y ekseninde ki hızları
-        bullets[i].isEnemyBullet = isEnemy;
-        bullets[i].damage = damage;
-        bullets[i].active = true;//Merminin düşmanmı yoksa bizim gemimizden mi diye belirlenir ve hasar değeri yüklenir
-        break;
+            bullets[i].y = y;
+            bullets[i].width = w;
+            bullets[i].height = h;//merminin özellikleri
+            bullets[i].speedX = speedX;
+            bullets[i].speedY = speedY;//Merminin X ve Y ekseninde ki hızları
+            bullets[i].isEnemyBullet = isEnemy;
+            bullets[i].damage = damage;
+            bullets[i].active = true;//Merminin düşmanmı yoksa bizim gemimizden mi diye belirlenir ve hasar değeri yüklenir
+            break;
+        }
     }
 }
-
 
 
 
@@ -562,6 +567,7 @@ int main(int argc, char* argv[])
     {
         Uint64 currentTime = SDL_GetTicks();//SDL motoru başladığından beri kaç milisaniye geçtiğini söyler
         float dt = (currentTime - lastTime) / 1000.0f;//Frameler arası süreyi belirler
+        if (dt > 0.05f) dt = 0.05f;
         lastTime = currentTime;//Değer güncellemesi yapar
 
 
@@ -754,56 +760,58 @@ int main(int argc, char* argv[])
 
 
             //       FORMASYON HAREKETİ
-            formationX += formationSpeedX * formationDirection * dt;//Merkez noktasına göre ortak hız olarak ayarlandı
-            bool hitEdge = false;
+
+            formationX += formationSpeedX * formationDirection * dt;
+
             for (int i = 0; i < MAX_ENEMIES; i++)
             {
-                if (enemies[i].active && !enemies[i].isDiving)
+                if (enemies[i].active)   // DİKKAT: !isDiving şartını tamamen sildik!
                 {
+
+                    // Düşmanın dalışta olsa bile "olması gereken" teorik yerini hesaplıyoruz
                     float currentEnemyX = formationX + enemies[i].offsetX;
-                    if (currentEnemyX <= 0 && formationDirection == -1)
+
+                    // Çarpma durumunda yönü "-1 ile çarpmak" yerine kesin olarak yön belirtiyoruz.
+                    // Bu sayede dışarıda kalsalar bile titremeye girmez, zorla içeri yürürler.
+                    if (currentEnemyX <= 0)
                     {
-                        hitEdge = true;
+                        formationDirection = 1;
                         break;
                     }
-                    if (currentEnemyX + enemies[i].width >= WIDTH && formationDirection == 1)
+                    if (currentEnemyX + enemies[i].width >= WIDTH)
                     {
-                        hitEdge = true;    //Tek bir düşman kenara çarparsa tüm filo başlangıç konumuna gider
+                        formationDirection = -1;
                         break;
                     }
                 }
             }
-            if (hitEdge) formationDirection *= -1;//Duvara çarparsa yön değişir
 
-            int activeEnemiesCount = 0;
+
+
+
+
+          // DÜŞMAN GÜNCELLEMELERİ
             int divingCount = 0;
-            for (int i = 0; i < MAX_ENEMIES; i++)
+            for (int k = 0; k < MAX_ENEMIES; k++)
             {
-                if (enemies[i].active)
+                if (enemies[k].active && enemies[k].isDiving)
                 {
-                    activeEnemiesCount++;
-                    if (enemies[i].isDiving) divingCount++;
+                    divingCount++;
                 }
             }
 
-
-
-
-
-            //  DÜŞMAN GÜNCELLEMELERİ
             for (int i = 0; i < MAX_ENEMIES; i++)
             {
-                if (enemies[i].active)
+                if (enemies[i].active) // <-- HAYATTA OLANLARI SEÇTİĞİMİZ ANA BLOK
                 {
-
+                    // --- 1. HAREKET VE DALIŞ KISMI ---
                     if (!enemies[i].isDiving)
                     {
-                        enemies[i].x = formationX + enemies[i].offsetX;//Düşman grubunu hizalar
-                        enemies[i].y = formationY + enemies[i].offsetY;//Düşman grubunu hizalar
+                        enemies[i].x = formationX + enemies[i].offsetX;
+                        enemies[i].y = formationY + enemies[i].offsetY;
 
-                        // Zırhlı düşmanlar dalış yapmazlar. Hızlı olanlar daha sık dalar.
-                        int diveChance = (enemies[i].type == Type_FAST) ? 3 : (enemies[i].type == Type_ARMORED) ? 0 : 1;//Hızlı düşman için 3, normal için 2,zırhlı için 0 olarak ayarlandı
-                        if (!enemies[i].isBoss && divingCount < 5 && rand() % 1000 < (diveChance + level))  //Dalışa geçme şartları
+                        int diveChance = (enemies[i].type == Type_FAST) ? 3 : (enemies[i].type == Type_ARMORED) ? 0 : 1;
+                        if (!enemies[i].isBoss && divingCount < 5 && rand() % 20000 < (diveChance + level))
                         {
                             enemies[i].isDiving = true;
                             divingCount++;
@@ -811,7 +819,6 @@ int main(int argc, char* argv[])
                     }
                     else
                     {
-                        // Türe göre dalış hızı ayarı
                         float diveSpeedMult = (enemies[i].type == Type_FAST) ? 1.8f : (enemies[i].type == Type_ARMORED) ? 0.6f : 1.0f;
                         enemies[i].y += (150.0f + level * 10.0f) * diveSpeedMult * dt;
 
@@ -821,417 +828,417 @@ int main(int argc, char* argv[])
                             enemies[i].y = formationY + enemies[i].offsetY;
                         }
                     }
-                }
 
 
 
-                // Düşman Atış Mekanizması
-                if (enemies[i].isBoss)
+            // Düşman Atış Mekanizması
+            if (enemies[i].isBoss)
+            {
+                enemies[i].attackCooldown -= dt;
+                if (enemies[i].attackCooldown <= 0.0f)
                 {
-                    enemies[i].attackCooldown -= dt;
-                    if (enemies[i].attackCooldown <= 0.0f)
+                    int bossDmg = 30 + (level * 3);//Hasar sabit kalmaz artar
+                    float centerX = enemies[i].x + enemies[i].width / 2.0f;
+                    float bY = enemies[i].y + enemies[i].height;
+                    int attackType = rand() % 100;
+
+                    if (attackType < 25)  //%25 ihtimalle 3 mermi fırlatır
                     {
-                        int bossDmg = 30 + (level * 3);//Hasar sabit kalmaz artar
-                        float centerX = enemies[i].x + enemies[i].width / 2.0f;
-                        float bY = enemies[i].y + enemies[i].height;
-                        int attackType = rand() % 100;
+                        shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, 0.0f, 400.0f, true, bossDmg / 2);
+                        shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, -60.0f, 400.0f, true, bossDmg / 2);
+                        shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, 60.0f, 400.0f, true, bossDmg / 2);
+                    }
+                    else
+                    {
+                        shootBullet(centerX - 12.0f, bY, 24.0f, 45.0f, 0.0f, 400.0f, true, bossDmg);//%75 ihtimalle tek mermi fırlatır
+                    }
 
-                        if (attackType < 25)  //%25 ihtimalle 3 mermi fırlatır
-                        {
-                            shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, 0.0f, 400.0f, true, bossDmg / 2);
-                            shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, -60.0f, 400.0f, true, bossDmg / 2);
-                            shootBullet(centerX - 3.0f, bY, 6.0f, 15.0f, 60.0f, 400.0f, true, bossDmg / 2);
-                        }
-                        else
-                        {
-                            shootBullet(centerX - 12.0f, bY, 24.0f, 45.0f, 0.0f, 400.0f, true, bossDmg);//%75 ihtimalle tek mermi fırlatır
-                        }
+                    enemies[i].attackCooldown = 1.5f + (rand() % 100) / 100.0f - (level * 0.02f);//Giderek boss leveli zorlaşır
+                    if(enemies[i].attackCooldown < 0.5f) enemies[i].attackCooldown = 0.5f;
+                }
+            }
+            else
+            {
+                // Normal-Zırhlı düşmanlar ateş eder Zırhlılar daha az ama güçlü atar
+                if (rand() % 4000 < (1 + level))  //Level arttıkça ateş etme sıklığı artar
+                {
+                    int enemyDmg = 10 + (level * 2);//Level arttıkça hasar artar
+                    if (enemies[i].type == Type_ARMORED) enemyDmg *= 2; // Zırhlı 2 kat hasar vurur
+                    if (enemies[i].type == Type_FAST) enemyDmg /= 2;    // Hızlı yarım hasar vurur
 
-                        enemies[i].attackCooldown = 1.5f + (rand() % 100) / 100.0f - (level * 0.02f);//Giderek boss leveli zorlaşır
-                        if(enemies[i].attackCooldown < 0.5f) enemies[i].attackCooldown = 0.5f;
+                    shootBullet(enemies[i].x + enemies[i].width / 2.0f - 3.0f, enemies[i].y + enemies[i].height,
+                                6.0f, 15.0f, 0.0f, 300.0f + (level * 10.0f), true, enemyDmg);//Mermi hızı level arttıkça artar
+                }
+            }
+
+
+
+
+            //  HİTBOX AŞAMASI
+            float px = player.x + player.width * 0.3f;
+            float py = player.y + player.height * 0.3f;//Sağdan ve soldan %30 arlık boşluk bıraktım
+            float pw = player.width * 0.4f;
+            float ph = player.height * 0.6f;//Genişliği %40 olarak ayarlandı Yüksekliği %60 olarak ayarlandı
+            float ex = enemies[i].x + enemies[i].width * 0.1f;
+            float ey = enemies[i].y + enemies[i].height * 0.1f;//Düşman hitboxı %10 u kadar ayarlandı
+            float ew = enemies[i].width * 0.8f;
+            float eh = enemies[i].height * 0.8f;
+
+            if (checkCollision(px, py, pw, ph, ex, ey, ew, eh))
+            {
+                if (!enemies[i].isBoss) enemies[i].isDiving = false;
+                // ÇARPMA HASARI TÜRE GÖRE
+                int crashDmg = 25;
+                if (enemies[i].isBoss) crashDmg = 50;
+                if (enemies[i].type == Type_ARMORED) crashDmg = 40;
+                if (enemies[i].type == Type_FAST) crashDmg = 10;
+                takePlayerDamage(crashDmg);
+            }
+        }
+    }
+
+
+    int activeEnemiesCount = 0;
+    for (int i = 0; i < MAX_ENEMIES; i++)
+    {
+        if (enemies[i].active)
+        {
+            activeEnemiesCount++;
+        }
+    }
+
+
+    if (activeEnemiesCount == 0)
+    {
+        score += 500 * level;
+        level++;//level arttıkça 500 puan ekler
+        initEnemies(level);
+    }
+
+
+
+
+
+    //  MERMİ GÜNCELLEMELERİ VE VURDU MU DİYE KONTROL ETME
+    for (int i = 0; i < MAX_BULLETS; i++)
+    {
+        if (bullets[i].active)
+        {
+            bullets[i].x += bullets[i].speedX * dt;//X ekseninde zamana göre ilerler
+            bullets[i].y += bullets[i].speedY * dt;//Y ekseninde zamana göre ilerler
+
+            if (bullets[i].y < 0 || bullets[i].y > HEIGHT || bullets[i].x < 0 || bullets[i].x > WIDTH)  //Mermi ekrandan çıkmışsa false yapar ve siler
+            {
+                bullets[i].active = false;
+                continue;//İşlemciyi gereksiz yere yormaz
+            }
+
+            if (!bullets[i].isEnemyBullet)
+            {
+                for (int j = 0; j < MAX_ENEMIES; j++)  //Attığımız mermileri düşmanlara tek tek değdi mi diye kontrol eder
+                {
+                    float ex = enemies[j].x + enemies[j].width * 0.1f;
+                    float ey = enemies[j].y + enemies[j].height * 0.1f;//Düşmanların hitboxları daraltılmıştır
+                    float ew = enemies[j].width * 0.8f;
+                    float eh = enemies[j].height * 0.8f;
+
+                    if (enemies[j].active && checkCollision(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height, ex, ey, ew, eh))
+                    {
+                        bullets[i].active = false;
+                        enemies[j].hp -= bullets[i].damage;//Düşmanın canından merminin hasarı çıkartılır
+
+
+
+                        // Mermi vurduğunda kıvılcım efekti
+                        SDL_Color sparkColor = {255, 255, 100, 255};
+                        spawnExplosion(bullets[i].x, bullets[i].y, sparkColor, 3);//3 parçacık gösterir hasar verdiği için
+
+                        if (enemies[j].hp <= 0)
+                        {
+                            enemies[j].active = false;
+                            enemiesKilled++;
+
+                            // DÜŞMAN ÖLDÜ - BÜYÜK PATLAMA EFEKTİ
+                            SDL_Color expColor = enemies[j].isBoss ? (SDL_Color)
+                            {
+                                200, 0, 255, 255
+} :
+                            (SDL_Color)
+                            {
+                                255, 100, 0, 255
+                            };//Boss ise mor diğerlerinde turuncu patlama olur
+                            spawnExplosion(enemies[j].x + enemies[j].width / 2.0f, enemies[j].y + enemies[j].height / 2.0f, expColor, 20);//20 parçacıklı bir patlama gösterir
+
+                            // ÖLEN DÜŞMANDAN KUTU DÜŞME İHTİMALİ
+                            trySpawnPowerUp(enemies[j].x + enemies[j].width / 2.0f, enemies[j].y);//Yukarıda %15 ihtimalle kutu düşeceğini ayarlamıştık şansa bağlı olarak düşer
+
+                            if (enemies[j].isBoss)
+                            {
+                                score += 5000;
+                                player.ammo += 50;
+                                player.lives += 1;
+                                spawnPopup(WIDTH / 2.0f - 50.0f, HEIGHT / 2.0f, "BOSS YOK EDILDI! +1 CAN", (SDL_Color)
+                                {
+                                    255, 255, 0, 255
+                                });
+                            }
+                            else
+                            {
+                                score += 100;
+                                if(enemies[j].type == Type_ARMORED) score += 50; // Zırhlı kesmek zor olduğu için fazladan puan verir
+                            }
+                        }
+                        break;
                     }
                 }
-                else
-                {
-                    // Normal-Zırhlı düşmanlar ateş eder Zırhlılar daha az ama güçlü atar
-                    if (rand() % 4000 < (1 + level))  //Level arttıkça ateş etme sıklığı artar
-                    {
-                        int enemyDmg = 10 + (level * 2);//Level arttıkça hasar artar
-                        if (enemies[i].type == Type_ARMORED) enemyDmg *= 2; // Zırhlı 2 kat hasar vurur
-                        if (enemies[i].type == Type_FAST) enemyDmg /= 2;    // Hızlı yarım hasar vurur
-
-                        shootBullet(enemies[i].x + enemies[i].width / 2.0f - 3.0f, enemies[i].y + enemies[i].height,
-                                    6.0f, 15.0f, 0.0f, 300.0f + (level * 10.0f), true, enemyDmg);//Mermi hızı level arttıkça artar
-                    }
-                }
-
-
-
-
-                //  HİTBOX AŞAMASI
+            }
+            else
+            {
                 float px = player.x + player.width * 0.3f;
-                float py = player.y + player.height * 0.3f;//Sağdan ve soldan %30 arlık boşluk bıraktım
+                float py = player.y + player.height * 0.3f;//Düşman mermisinin çarpıp çarpmadığına bakılır
                 float pw = player.width * 0.4f;
-                float ph = player.height * 0.6f;//Genişliği %40 olarak ayarlandı Yüksekliği %60 olarak ayarlandı
-                float ex = enemies[i].x + enemies[i].width * 0.1f;
-                float ey = enemies[i].y + enemies[i].height * 0.1f;//Düşman hitboxı %10 u kadar ayarlandı
-                float ew = enemies[i].width * 0.8f;
-                float eh = enemies[i].height * 0.8f;
+                float ph = player.height * 0.6f;
 
-                if (checkCollision(px, py, pw, ph, ex, ey, ew, eh))
+                if (checkCollision(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height, px, py, pw, ph))
                 {
-                    if (!enemies[i].isBoss) enemies[i].isDiving = false;
-                    // ÇARPMA HASARI TÜRE GÖRE
-                    int crashDmg = 25;
-                    if (enemies[i].isBoss) crashDmg = 50;
-                    if (enemies[i].type == Type_ARMORED) crashDmg = 40;
-                    if (enemies[i].type == Type_FAST) crashDmg = 10;
-                    takePlayerDamage(crashDmg);
+                    bullets[i].active = false;
+                    takePlayerDamage(bullets[i].damage);//Eğer varsa sağlık azalır
                 }
             }
         }
 
+     }
+        }
+    if (isGameOver && score > highScore)
+    {
+        highScore = score;    //Skor kaydeder
+        saveHighScore(highScore);
+    }
 
-        int activeEnemiesCount = 0;
+
+
+
+
+
+
+    //////////////////////////////////////////////
+    // =           EKRAN ÇİZİM AŞAMASI          =
+    //////////////////////////////////////////////
+
+    SDL_SetRenderDrawColor(renderer, 10, 10, 20, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);//Tüm ekranı boyar ve temizlemiş olur
+
+    // 1) ARKA PLAN YILDIZ ÇİZİMİ
+    for (int i = 0; i < MAX_STARS; i++)
+    {
+        SDL_SetRenderDrawColor(renderer, stars[i].color.r, stars[i].color.g, stars[i].color.b, stars[i].color.a);//Gri tonu atanır
+        SDL_FRect sRect = { stars[i].x, stars[i].y, stars[i].size, stars[i].size };//Yıldıza kalıp çıkartır
+        SDL_RenderFillRect(renderer, &sRect);//İçini boyar ve ekranda görünür
+    }
+
+    if (!isGameOver)
+    {
+        // 2) OYUNCU ÇİZİMİ
+        if (player.invulnerabilityTimer <= 0.0f || (int)(player.invulnerabilityTimer * 8) % 2 == 0)  //Hasar almaz olduğu zaman yanıp söner
+        {
+            int r = 255 - (player.hp * 2.5f);
+            if(r<0) r=0;
+            if(r>255) r=255;//Gemi tam canlıyken açık mavi renktedir sağlık azaldıkça kırmızı mor renklere dönerek ölüyorsun izlemini yaratır
+            int g = player.hp * 2.0f;
+            if(g>200) g=200;
+            SDL_SetRenderDrawColor(renderer, r, g, 255, SDL_ALPHA_OPAQUE);
+
+            drawPlayerShip(renderer, player.x, player.y, player.width, player.height);//Geminin üzerine işlenir boyanır
+
+
+            //  Kalkan Aktifse Etrafına Mavi Kare Çiz
+            if (player.shieldTimer > 0.0f)
+            {
+                SDL_SetRenderDrawColor(renderer, 0, 150, 255, SDL_ALPHA_OPAQUE);//Koyu mavi bir renge ayarlandı
+                SDL_FRect sRect = { player.x - 5.0f, player.y - 5.0f, player.width + 10.0f, player.height + 10.0f };//Gemiyle arasına boşluk bırakır
+                // Retro bir his vermesi için FRect kullanıldı
+
+
+                // Retro Kalkan Efekti
+                SDL_FRect topB = { sRect.x, sRect.y, sRect.w, 2.0f };//Üst duvar
+                SDL_FRect botB = { sRect.x, sRect.y + sRect.h, sRect.w, 2.0f };//Alt duvar
+                SDL_FRect leftB = { sRect.x, sRect.y, 2.0f, sRect.h };//Sol duvar
+                SDL_FRect rightB = { sRect.x + sRect.w, sRect.y, 2.0f, sRect.h + 2.0f };//Sağ duvar
+                SDL_RenderFillRect(renderer, &topB);
+                SDL_RenderFillRect(renderer, &botB);//Hepsi aynı renge boyanır
+                SDL_RenderFillRect(renderer, &leftB);
+                SDL_RenderFillRect(renderer, &rightB);
+            }
+
+
+
+            // Sağlık Barı
+            SDL_SetRenderDrawColor(renderer, 200, 0, 0, SDL_ALPHA_OPAQUE);//Kırmızı renk ayarlandı
+            SDL_FRect bgBar = { player.x, player.y - 12.0f, player.width, 5.0f };//Gemiye göre konumu
+            SDL_RenderFillRect(renderer, &bgBar);
+
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);//Yeşil renk ayarlandı
+            float hpPercent = player.hp / 100.0f;
+            if (hpPercent < 0.0f) hpPercent = 0.0f;//Yüzde hesabı yapılıyor
+            SDL_FRect fgBar = { player.x, player.y - 12.0f, player.width * hpPercent, 5.0f };//Gemiye göre konumu
+            SDL_RenderFillRect(renderer, &fgBar);
+
+            char hpBarText[10];
+            sprintf(hpBarText, "%d", player.hp);//Sayıyı yazıya çevirmemize olanak sağlar
+            SDL_Color greenColor = { 0, 255, 0, 255 };
+            renderText(renderer, fontSmall, hpBarText, player.x + player.width / 2.0f - 10.0f, player.y - 28.0f, greenColor);//Barın tam ortasına hizalanmasını sağlar
+        }
+
+        // 3) GÜÇLENDİRİCİ KUTULARI ÇİZİMİ
+        for (int i = 0; i < MAX_POWERUPS; i++)
+        {
+            if (powerups[i].active)
+            {
+                char pText[2];//2 olmasının nedeni \0 eklenmesidir
+                if (powerups[i].type == Power_SHIELD)
+                {
+                    SDL_SetRenderDrawColor(renderer, 0, 150, 255, SDL_ALPHA_OPAQUE); // Kalkan (Mavi)
+                    sprintf(pText, "K");//Kalkan için K harfi ve mavi renk kullanıldı
+                }
+                else if (powerups[i].type == Power_RAPIDFIRE)
+                {
+                    SDL_SetRenderDrawColor(renderer, 255, 200, 0, SDL_ALPHA_OPAQUE); // Seri Atış (Sarı)
+                    sprintf(pText, "S");//Seri atış için S harfi ve turuncu renk kullanıldı
+                }
+                else
+                {
+                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);   // Mermi (Yeşil)
+                    sprintf(pText, "M");//Ekstra mermi içim M harf, ve yeşil renk kullanıldı
+                }
+
+                SDL_FRect pRect = { powerups[i].x, powerups[i].y, 15.0f, 15.0f };//15x15 lik kutu oluşturuklup içine güçlendiricinin harfi yazılır
+                SDL_RenderFillRect(renderer, &pRect);
+
+                // Kutunun üstüne harfini yaz
+                SDL_Color black = {0,0,0,255};
+                renderText(renderer, fontSmall, pText, powerups[i].x + 3.0f, powerups[i].y, black);
+            }
+        }
+
+        // 4) DÜŞMAN ÇİZİMLERİ
         for (int i = 0; i < MAX_ENEMIES; i++)
         {
             if (enemies[i].active)
             {
-                activeEnemiesCount++;
+                if (enemies[i].isBoss)
+                {
+                    drawBossShip(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);//Daha önceden yazdığım fonksiyonu çağırır
+                    char bossHpText[30];
+                    sprintf(bossHpText, "BOSS HP: %d", enemies[i].hp);//Sprintf ile can değeri metne çevrilip kırmızı renkte yazılır
+                    SDL_Color bColor = {255, 0, 0, 255};
+                    renderText(renderer, font, bossHpText, enemies[i].x + 30.0f, enemies[i].y - 30.0f, bColor);
+                }
+                else
+                {
+                    if (enemies[i].type == Type_FAST)
+                    {
+                        SDL_SetRenderDrawColor(renderer, 50, 255, 50, SDL_ALPHA_OPAQUE); // Hızlı olan düşmanlar yeşil olarak ayarlandı
+                        drawFastEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+                    }
+                    else if (enemies[i].type == Type_ARMORED)
+                    {
+                        SDL_SetRenderDrawColor(renderer, 50, 150, 255, SDL_ALPHA_OPAQUE); // Zırhlı olan düşmanlar mavi olarak ayarlanadı
+                        drawArmoredEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+                    }
+                    else
+                    {
+                        SDL_SetRenderDrawColor(renderer, 255, 50, 50, SDL_ALPHA_OPAQUE); // Normal düşmanlar kırmızı ayarlandı
+                        drawNormalEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+                    }
+                }
             }
         }
 
 
-        if (activeEnemiesCount == 0)
-        {
-            score += 500 * level;
-            level++;//level arttıkça 500 puan ekler
-            initEnemies(level);
-        }
 
-
-
-
-
-        //  MERMİ GÜNCELLEMELERİ VE VURDU MU DİYE KONTROL ETME
+        // 5) MERMİ ÇİZİMİ
         for (int i = 0; i < MAX_BULLETS; i++)
         {
             if (bullets[i].active)
             {
-                bullets[i].x += bullets[i].speedX * dt;//X ekseninde zamana göre ilerler
-                bullets[i].y += bullets[i].speedY * dt;//Y ekseninde zamana göre ilerler
-
-                if (bullets[i].y < 0 || bullets[i].y > HEIGHT || bullets[i].x < 0 || bullets[i].x > WIDTH)  //Mermi ekrandan çıkmışsa false yapar ve siler
+                if (bullets[i].isEnemyBullet)
                 {
-                    bullets[i].active = false;
-                    continue;//İşlemciyi gereksiz yere yormaz
-                }
-
-                if (!bullets[i].isEnemyBullet)
-                {
-                    for (int j = 0; j < MAX_ENEMIES; j++)  //Attığımız mermileri düşmanlara tek tek değdi mi diye kontrol eder
-                    {
-                        float ex = enemies[j].x + enemies[j].width * 0.1f;
-                        float ey = enemies[j].y + enemies[j].height * 0.1f;//Düşmanların hitboxları daraltılmıştır
-                        float ew = enemies[j].width * 0.8f;
-                        float eh = enemies[j].height * 0.8f;
-
-                        if (enemies[j].active && checkCollision(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height, ex, ey, ew, eh))
-                        {
-                            bullets[i].active = false;
-                            enemies[j].hp -= bullets[i].damage;//Düşmanın canından merminin hasarı çıkartılır
-
-
-
-                            // Mermi vurduğunda kıvılcım efekti
-                            SDL_Color sparkColor = {255, 255, 100, 255};
-                            spawnExplosion(bullets[i].x, bullets[i].y, sparkColor, 3);//3 parçacık gösterir hasar verdiği için
-
-                            if (enemies[j].hp <= 0)
-                            {
-                                enemies[j].active = false;
-                                enemiesKilled++;
-
-                                // DÜŞMAN ÖLDÜ - BÜYÜK PATLAMA EFEKTİ
-                                SDL_Color expColor = enemies[j].isBoss ? (SDL_Color)
-                                {
-                                    200, 0, 255, 255
-} :
-                                (SDL_Color)
-                                {
-                                    255, 100, 0, 255
-                                };//Boss ise mor diğerlerinde turuncu patlama olur
-                                spawnExplosion(enemies[j].x + enemies[j].width / 2.0f, enemies[j].y + enemies[j].height / 2.0f, expColor, 20);//20 parçacıklı bir patlama gösterir
-
-                                // ÖLEN DÜŞMANDAN KUTU DÜŞME İHTİMALİ
-                                trySpawnPowerUp(enemies[j].x + enemies[j].width / 2.0f, enemies[j].y);//Yukarıda %15 ihtimalle kutu düşeceğini ayarlamıştık şansa bağlı olarak düşer
-
-                                if (enemies[j].isBoss)
-                                {
-                                    score += 5000;
-                                    player.ammo += 50;
-                                    player.lives += 1;
-                                    spawnPopup(WIDTH / 2.0f - 50.0f, HEIGHT / 2.0f, "BOSS YOK EDILDI! +1 CAN", (SDL_Color)
-                                    {
-                                        255, 255, 0, 255
-                                    });
-                                }
-                                else
-                                {
-                                    score += 100;
-                                    if(enemies[j].type == Type_ARMORED) score += 50; // Zırhlı kesmek zor olduğu için fazladan puan verir
-                                }
-                            }
-                            break;
-                        }
-                    }
+                    if (bullets[i].height > 40.0f) SDL_SetRenderDrawColor(renderer, 255, 100, 0, SDL_ALPHA_OPAQUE);//Turuncu boss için
+                    else SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);//Kırmızı normal düşman için
                 }
                 else
                 {
-                    float px = player.x + player.width * 0.3f;
-                    float py = player.y + player.height * 0.3f;//Düşman mermisinin çarpıp çarpmadığına bakılır
-                    float pw = player.width * 0.4f;
-                    float ph = player.height * 0.6f;
-
-                    if (checkCollision(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height, px, py, pw, ph))
-                    {
-                        bullets[i].active = false;
-                        takePlayerDamage(bullets[i].damage);//Eğer varsa sağlık azalır
-                    }
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 0, SDL_ALPHA_OPAQUE);//Sarı oyuncu için
                 }
+                SDL_FRect bRect = { bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height };
+                SDL_RenderFillRect(renderer, &bRect);
             }
         }
 
-        if (isGameOver && score > highScore)
+        // 6) PATLAMA EFEKTİ ÇİZİMİ
+        for (int i = 0; i < MAX_PARTICLES; i++)
         {
-            highScore = score;    //Skor kaydeder
-            saveHighScore(highScore);
+            if (particles[i].active)
+            {
+                // Ömrü azaldıkça boyutu ufalır
+                float size = 4.0f * (particles[i].life / particles[i].maxLife);//4x4 lük olarak başlarken zamanla 3x3,2x2 diye giderek azalır
+                if (size < 1.0f) size = 1.0f; // 1 pikselin altındaysa ekrana çizilmez
+
+                SDL_SetRenderDrawColor(renderer, particles[i].color.r, particles[i].color.g, particles[i].color.b, SDL_ALPHA_OPAQUE);
+                SDL_FRect pRect = { particles[i].x, particles[i].y, size, size };
+                SDL_RenderFillRect(renderer, &pRect);
+            }
         }
 
 
-
-
-
-
-
-        //////////////////////////////////////////////
-        // =           EKRAN ÇİZİM AŞAMASI          =
-        //////////////////////////////////////////////
-
-        SDL_SetRenderDrawColor(renderer, 10, 10, 20, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(renderer);//Tüm ekranı boyar ve temizlemiş olur
-
-        // 1) ARKA PLAN YILDIZ ÇİZİMİ
-        for (int i = 0; i < MAX_STARS; i++)
+        // 7) BİLGİLENDİRME YAZILARININ ÇİZİMLERİ
+        for (int i = 0; i < MAX_POPUPS; i++)
         {
-            SDL_SetRenderDrawColor(renderer, stars[i].color.r, stars[i].color.g, stars[i].color.b, stars[i].color.a);//Gri tonu atanır
-            SDL_FRect sRect = { stars[i].x, stars[i].y, stars[i].size, stars[i].size };//Yıldıza kalıp çıkartır
-            SDL_RenderFillRect(renderer, &sRect);//İçini boyar ve ekranda görünür
+            if (popups[i].active)
+            {
+                renderText(renderer, fontSmall, popups[i].text, popups[i].x, popups[i].y, popups[i].color);//Fonksiyonu çağırır ve fontsmall ile 12 piksellik fontla yazar.
+            }
         }
 
-        if (!isGameOver)
-        {
-            // 2) OYUNCU ÇİZİMİ
-            if (player.invulnerabilityTimer <= 0.0f || (int)(player.invulnerabilityTimer * 8) % 2 == 0)  //Hasar almaz olduğu zaman yanıp söner
-            {
-                int r = 255 - (player.hp * 2.5f);
-                if(r<0) r=0;
-                if(r>255) r=255;//Gemi tam canlıyken açık mavi renktedir sağlık azaldıkça kırmızı mor renklere dönerek ölüyorsun izlemini yaratır
-                int g = player.hp * 2.0f;
-                if(g>200) g=200;
-                SDL_SetRenderDrawColor(renderer, r, g, 255, SDL_ALPHA_OPAQUE);
+        // 8) ARAYÜZ ÇİZİMİ
+        char scoreText[150];
+        char infoText[150];
+        sprintf(scoreText, "Skor: %d   Level: %d   Can: %d   HP: %d   En Yuksek: %d", score, level, player.lives, player.hp, highScore);
 
-                drawPlayerShip(renderer, player.x, player.y, player.width, player.height);//Geminin üzerine işlenir boyanır
+        // Eğer güçlendirici aktifse yazıda göster
+        char activePower[50] = "";//Kalan süreyi yazar
+        if (player.shieldTimer > 0) sprintf(activePower, " [KALKAN: %.1fs]", player.shieldTimer);
+        else if (player.rapidFireTimer > 0) sprintf(activePower, " [SERI ATIS: %.1fs]", player.rapidFireTimer);//Geri kalan süreyi ondalıklı gösterir
 
+        sprintf(infoText, "Mermi: %d   Vurulan: %d %s", player.ammo, enemiesKilled, activePower);
 
-                //  Kalkan Aktifse Etrafına Mavi Kare Çiz
-                if (player.shieldTimer > 0.0f)
-                {
-                    SDL_SetRenderDrawColor(renderer, 0, 150, 255, SDL_ALPHA_OPAQUE);//Koyu mavi bir renge ayarlandı
-                    SDL_FRect sRect = { player.x - 5.0f, player.y - 5.0f, player.width + 10.0f, player.height + 10.0f };//Gemiyle arasına boşluk bırakır
-                    // Retro bir his vermesi için FRect kullanıldı
-
-
-                    // Retro Kalkan Efekti
-                    SDL_FRect topB = { sRect.x, sRect.y, sRect.w, 2.0f };//Üst duvar
-                    SDL_FRect botB = { sRect.x, sRect.y + sRect.h, sRect.w, 2.0f };//Alt duvar
-                    SDL_FRect leftB = { sRect.x, sRect.y, 2.0f, sRect.h };//Sol duvar
-                    SDL_FRect rightB = { sRect.x + sRect.w, sRect.y, 2.0f, sRect.h + 2.0f };//Sağ duvar
-                    SDL_RenderFillRect(renderer, &topB);
-                    SDL_RenderFillRect(renderer, &botB);//Hepsi aynı renge boyanır
-                    SDL_RenderFillRect(renderer, &leftB);
-                    SDL_RenderFillRect(renderer, &rightB);
-                }
-
-
-
-                // Sağlık Barı
-                SDL_SetRenderDrawColor(renderer, 200, 0, 0, SDL_ALPHA_OPAQUE);//Kırmızı renk ayarlandı
-                SDL_FRect bgBar = { player.x, player.y - 12.0f, player.width, 5.0f };//Gemiye göre konumu
-                SDL_RenderFillRect(renderer, &bgBar);
-
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);//Yeşil renk ayarlandı
-                float hpPercent = player.hp / 100.0f;
-                if (hpPercent < 0.0f) hpPercent = 0.0f;//Yüzde hesabı yapılıyor
-                SDL_FRect fgBar = { player.x, player.y - 12.0f, player.width * hpPercent, 5.0f };//Gemiye göre konumu
-                SDL_RenderFillRect(renderer, &fgBar);
-
-                char hpBarText[10];
-                sprintf(hpBarText, "%d", player.hp);//Sayıyı yazıya çevirmemize olanak sağlar
-                SDL_Color greenColor = { 0, 255, 0, 255 };
-                renderText(renderer, fontSmall, hpBarText, player.x + player.width / 2.0f - 10.0f, player.y - 28.0f, greenColor);//Barın tam ortasına hizalanmasını sağlar
-            }
-
-            // 3) GÜÇLENDİRİCİ KUTULARI ÇİZİMİ
-            for (int i = 0; i < MAX_POWERUPS; i++)
-            {
-                if (powerups[i].active)
-                {
-                    char pText[2];//2 olmasının nedeni \0 eklenmesidir
-                    if (powerups[i].type == Power_SHIELD)
-                    {
-                        SDL_SetRenderDrawColor(renderer, 0, 150, 255, SDL_ALPHA_OPAQUE); // Kalkan (Mavi)
-                        sprintf(pText, "K");//Kalkan için K harfi ve mavi renk kullanıldı
-                    }
-                    else if (powerups[i].type == Power_RAPIDFIRE)
-                    {
-                        SDL_SetRenderDrawColor(renderer, 255, 200, 0, SDL_ALPHA_OPAQUE); // Seri Atış (Sarı)
-                        sprintf(pText, "S");//Seri atış için S harfi ve turuncu renk kullanıldı
-                    }
-                    else
-                    {
-                        SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);   // Mermi (Yeşil)
-                        sprintf(pText, "M");//Ekstra mermi içim M harf, ve yeşil renk kullanıldı
-                    }
-
-                    SDL_FRect pRect = { powerups[i].x, powerups[i].y, 15.0f, 15.0f };//15x15 lik kutu oluşturuklup içine güçlendiricinin harfi yazılır
-                    SDL_RenderFillRect(renderer, &pRect);
-
-                    // Kutunun üstüne harfini yaz
-                    SDL_Color black = {0,0,0,255};
-                    renderText(renderer, fontSmall, pText, powerups[i].x + 3.0f, powerups[i].y, black);
-                }
-            }
-
-            // 4) DÜŞMAN ÇİZİMLERİ
-            for (int i = 0; i < MAX_ENEMIES; i++)
-            {
-                if (enemies[i].active)
-                {
-                    if (enemies[i].isBoss)
-                    {
-                        drawBossShip(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);//Daha önceden yazdığım fonksiyonu çağırır
-                        char bossHpText[30];
-                        sprintf(bossHpText, "BOSS HP: %d", enemies[i].hp);//Sprintf ile can değeri metne çevrilip kırmızı renkte yazılır
-                        SDL_Color bColor = {255, 0, 0, 255};
-                        renderText(renderer, font, bossHpText, enemies[i].x + 30.0f, enemies[i].y - 30.0f, bColor);
-                    }
-                    else
-                    {
-                        if (enemies[i].type == Type_FAST)
-                        {
-                            SDL_SetRenderDrawColor(renderer, 50, 255, 50, SDL_ALPHA_OPAQUE); // Hızlı olan düşmanlar yeşil olarak ayarlandı
-                            drawFastEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
-                        }
-                        else if (enemies[i].type == Type_ARMORED)
-                        {
-                            SDL_SetRenderDrawColor(renderer, 50, 150, 255, SDL_ALPHA_OPAQUE); // Zırhlı olan düşmanlar mavi olarak ayarlanadı
-                            drawArmoredEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
-                        }
-                        else
-                        {
-                            SDL_SetRenderDrawColor(renderer, 255, 50, 50, SDL_ALPHA_OPAQUE); // Normal düşmanlar kırmızı ayarlandı
-                            drawNormalEnemy(renderer, enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
-                        }
-                    }
-                }
-            }
-
-
-
-            // 5) MERMİ ÇİZİMİ
-            for (int i = 0; i < MAX_BULLETS; i++)
-            {
-                if (bullets[i].active)
-                {
-                    if (bullets[i].isEnemyBullet)
-                    {
-                        if (bullets[i].height > 40.0f) SDL_SetRenderDrawColor(renderer, 255, 100, 0, SDL_ALPHA_OPAQUE);//Turuncu boss için
-                        else SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);//Kırmızı normal düşman için
-                    }
-                    else
-                    {
-                        SDL_SetRenderDrawColor(renderer, 255, 255, 0, SDL_ALPHA_OPAQUE);//Sarı oyuncu için
-                    }
-                    SDL_FRect bRect = { bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height };
-                    SDL_RenderFillRect(renderer, &bRect);
-                }
-            }
-
-            // 6) PATLAMA EFEKTİ ÇİZİMİ
-            for (int i = 0; i < MAX_PARTICLES; i++)
-            {
-                if (particles[i].active)
-                {
-                    // Ömrü azaldıkça boyutu ufalır
-                    float size = 4.0f * (particles[i].life / particles[i].maxLife);//4x4 lük olarak başlarken zamanla 3x3,2x2 diye giderek azalır
-                    if (size < 1.0f) size = 1.0f; // 1 pikselin altındaysa ekrana çizilmez
-
-                    SDL_SetRenderDrawColor(renderer, particles[i].color.r, particles[i].color.g, particles[i].color.b, SDL_ALPHA_OPAQUE);
-                    SDL_FRect pRect = { particles[i].x, particles[i].y, size, size };
-                    SDL_RenderFillRect(renderer, &pRect);
-                }
-            }
-
-
-            // 7) BİLGİLENDİRME YAZILARININ ÇİZİMLERİ
-            for (int i = 0; i < MAX_POPUPS; i++)
-            {
-                if (popups[i].active)
-                {
-                    renderText(renderer, fontSmall, popups[i].text, popups[i].x, popups[i].y, popups[i].color);//Fonksiyonu çağırır ve fontsmall ile 12 piksellik fontla yazar.
-                }
-            }
-
-            // 8) ARAYÜZ ÇİZİMİ
-            char scoreText[150];
-            char infoText[150];
-            sprintf(scoreText, "Skor: %d   Level: %d   Can: %d   HP: %d   En Yuksek: %d", score, level, player.lives, player.hp, highScore);
-
-            // Eğer güçlendirici aktifse yazıda göster
-            char activePower[50] = "";//Kalan süreyi yazar
-            if (player.shieldTimer > 0) sprintf(activePower, " [KALKAN: %.1fs]", player.shieldTimer);
-            else if (player.rapidFireTimer > 0) sprintf(activePower, " [SERI ATIS: %.1fs]", player.rapidFireTimer);//Geri kalan süreyi ondalıklı gösterir
-
-            sprintf(infoText, "Mermi: %d   Vurulan: %d %s", player.ammo, enemiesKilled, activePower);
-
-            SDL_Color textColor = { 255, 255, 255, 255 };
-            renderText(renderer, font, scoreText, 10.0f, 10.0f, textColor);
-            renderText(renderer, font, infoText, 10.0f, 35.0f, textColor);
-        }
-        else
-        {
-            SDL_Color redColor = { 255, 50, 50, 255 };
-            renderText(renderer, font, "OYUN BITTI! YENIDEN BASLAMAK ICIN 'R' TUSUNA BASIN.", 100.0f, HEIGHT / 2.0f, redColor);
-            renderText(renderer, font, "CIKMAK ICIN 'ESC' TUSUNA BASIN.", 100.0f, HEIGHT / 2.0f + 40.0f, redColor);
-        }
-
-        SDL_RenderPresent(renderer); // Oyunu oynanabilen tutan koddur
-
+        SDL_Color textColor = { 255, 255, 255, 255 };
+        renderText(renderer, font, scoreText, 10.0f, 10.0f, textColor);
+        renderText(renderer, font, infoText, 10.0f, 35.0f, textColor);
+    }
+    else
+    {
+        SDL_Color redColor = { 255, 50, 50, 255 };
+        renderText(renderer, font, "OYUN BITTI! YENIDEN BASLAMAK ICIN 'R' TUSUNA BASIN.", 100.0f, HEIGHT / 2.0f, redColor);
+        renderText(renderer, font, "CIKMAK ICIN 'ESC' TUSUNA BASIN.", 100.0f, HEIGHT / 2.0f + 40.0f, redColor);
     }
 
-    //  TEMİZLİK
-    if (font) TTF_CloseFont(font);
-    if (fontSmall) TTF_CloseFont(fontSmall);
-    SDL_ShowCursor();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
+    SDL_RenderPresent(renderer); // Oyunu oynanabilen tutan koddur
+
+}
+
+//  TEMİZLİK
+if (font) TTF_CloseFont(font);
+if (fontSmall) TTF_CloseFont(fontSmall);
+SDL_ShowCursor();
+SDL_DestroyRenderer(renderer);
+SDL_DestroyWindow(window);
+TTF_Quit();
+SDL_Quit();
 
 
 
-    return 0;
+return 0;
 }
 
 
