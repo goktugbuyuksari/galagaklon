@@ -844,13 +844,38 @@ int main(int argc, char* argv[]) {
                 drawPlayerShip(renderer, player.x, player.y, player.width, player.height);//Geminin üzerine işlenir boyanır
 
 
+              //  Kalkan Aktifse Etrafına Mavi Kare Çiz
+                if (player.shieldTimer > 0.0f) {
+                    SDL_SetRenderDrawColor(renderer, 0, 150, 255, SDL_ALPHA_OPAQUE);//Koyu mavi bir renge ayarlandı
+                    SDL_FRect sRect = { player.x - 5.0f, player.y - 5.0f, player.width + 10.0f, player.height + 10.0f };//Gemiyle arasına boşluk bırakır
+                    // Retro bir his vermesi için FRect kullanıldı
 
 
+                    // Retro Kalkan Efekti
+                    SDL_FRect topB = { sRect.x, sRect.y, sRect.w, 2.0f };//Üst duvar
+                    SDL_FRect botB = { sRect.x, sRect.y + sRect.h, sRect.w, 2.0f };//Alt duvar
+                    SDL_FRect leftB = { sRect.x, sRect.y, 2.0f, sRect.h };//Sol duvar
+                    SDL_FRect rightB = { sRect.x + sRect.w, sRect.y, 2.0f, sRect.h + 2.0f };//Sağ duvar
+                    SDL_RenderFillRect(renderer, &topB); SDL_RenderFillRect(renderer, &botB);//Hepsi aynı renge boyanır
+                    SDL_RenderFillRect(renderer, &leftB); SDL_RenderFillRect(renderer, &rightB);
+                }
 
 
 
+                // Sağlık Barı
+                SDL_SetRenderDrawColor(renderer, 200, 0, 0, SDL_ALPHA_OPAQUE);//Kırmızı renk ayarlandı
+                SDL_FRect bgBar = { player.x, player.y - 12.0f, player.width, 5.0f };//Gemiye göre konumu
+                SDL_RenderFillRect(renderer, &bgBar);
 
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);//Yeşil renk ayarlandı
+                float hpPercent = player.hp / 100.0f; if (hpPercent < 0.0f) hpPercent = 0.0f;//Yüzde hesabı yapılıyor
+                SDL_FRect fgBar = { player.x, player.y - 12.0f, player.width * hpPercent, 5.0f };//Gemiye göre konumu
+                SDL_RenderFillRect(renderer, &fgBar);
 
+                char hpBarText[10]; sprintf(hpBarText, "%d", player.hp);//Sayıyı yazıya çevirmemize olanak sağlar
+                SDL_Color greenColor = { 0, 255, 0, 255 };
+                renderText(renderer, fontSmall, hpBarText, player.x + player.width / 2.0f - 10.0f, player.y - 28.0f, greenColor);//Barın tam ortasına hizalanmasını sağlar
+            }
 
 
 
@@ -1281,7 +1306,13 @@ int main(int argc, char* argv[]) {
 
 
 
-            }}
+
+
+
+
+
+
+            }
     return 0;}
 
 
